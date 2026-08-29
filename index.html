@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ระบบบันทึกและคำนวณนับสต็อกสินค้า</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>ระบบนับสต็อกสินค้า</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -18,10 +20,12 @@
             --border: #e2e8f0;
             --success: #16a34a;
             --danger: #dc2626;
+            --warning: #d97706;
+            --uncounted-bg: #fffbeb;
         }
 
         * { box-sizing: border-box; font-family: 'Sarabun', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-body); margin: 0; padding: 16px; color: var(--text-main); padding-bottom: 90px; }
+        body { background-color: var(--bg-body); margin: 0; padding: 16px; color: var(--text-main); padding-bottom: 100px; }
         .container { max-width: 1280px; margin: 0 auto; }
 
         /* Header */
@@ -56,22 +60,22 @@
         .tab-btn { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-muted); }
         .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 
-        .btn { padding: 10px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn { padding: 10px 14px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-success { background-color: var(--success); color: white; }
+        .btn-line { background-color: #06c755; color: white; }
         .btn-outline { background-color: white; border: 1px solid var(--border); color: var(--text-main); }
         .btn-danger { background-color: #fee2e2; color: var(--danger); }
 
-        /* ===================================================
-           📱 MOBILE VIEW (Default & Screens < 768px)
-           =================================================== */
+        /* 📱 Mobile UI */
         .desktop-only { display: none !important; }
         .mobile-only { display: block !important; }
 
         .mobile-card-list { display: flex; flex-direction: column; gap: 12px; }
         .item-card {
             background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: background-color 0.2s;
         }
+        .item-card.uncounted { background-color: var(--uncounted-bg); border-color: #fef08a; }
         .item-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
         .item-card-title { font-weight: 700; font-size: 15px; color: var(--text-main); }
         .item-card-unit { font-size: 12px; color: var(--text-muted); background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
@@ -79,9 +83,8 @@
         .item-card-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .input-box-group label { display: block; font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
         
-        /* Mobile Stepper Input */
-        .mobile-stepper { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-        .mobile-stepper button { width: 36px; height: 42px; background: #f1f5f9; border: none; font-size: 18px; font-weight: bold; color: var(--text-main); }
+        .mobile-stepper { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: white; }
+        .mobile-stepper button { width: 38px; height: 42px; background: #f1f5f9; border: none; font-size: 18px; font-weight: bold; color: var(--text-main); }
         .mobile-stepper input { border: none; text-align: center; font-weight: 700; font-size: 16px; width: 100%; padding: 0; }
 
         .item-card-footer {
@@ -89,21 +92,18 @@
             background: #f8fafc; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
         }
 
-        /* Mobile Fixed Bottom Bar */
         .mobile-bottom-bar {
             position: fixed; bottom: 0; left: 0; right: 0; background: white;
             border-top: 1px solid var(--border); padding: 12px 16px;
-            display: flex; gap: 10px; box-shadow: 0 -4px 12px rgba(0,0,0,0.08); z-index: 100;
+            display: flex; gap: 8px; box-shadow: 0 -4px 12px rgba(0,0,0,0.08); z-index: 100;
         }
-        .mobile-bottom-bar .btn { flex: 1; height: 48px; font-size: 16px; }
+        .mobile-bottom-bar .btn { flex: 1; height: 44px; font-size: 14px; }
 
-        /* ===================================================
-           💻 DESKTOP VIEW (Screens >= 768px)
-           =================================================== */
+        /* 💻 Desktop UI */
         @media (min-width: 768px) {
             body { padding-bottom: 24px; }
             .desktop-only { display: table-row-group !important; }
-            .desktop-block { display: block !important; }
+            .desktop-block { display: flex !important; }
             .mobile-only { display: none !important; }
 
             .control-panel { flex-wrap: nowrap; }
@@ -116,7 +116,8 @@
             table { width: 100%; border-collapse: collapse; font-size: 14px; }
             th { background-color: #0f172a; color: #ffffff; font-weight: 600; padding: 12px; text-align: center; position: sticky; top: 0; z-index: 10; }
             td { border-bottom: 1px solid #f1f5f9; padding: 10px; text-align: center; vertical-align: middle; }
-            tr:hover { background-color: #f8fafc; }
+            tr.uncounted { background-color: var(--uncounted-bg); }
+            tr:hover { background-color: #f1f5f9; }
             td.item-name { text-align: left; font-weight: 600; }
             input[type="number"] { width: 90px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; text-align: right; font-weight: 600; }
 
@@ -132,10 +133,9 @@
     <div class="container">
         <header class="app-header">
             <h1>📦 ระบบนับสต็อกสินค้า</h1>
-            <span id="save-status" class="status-badge">ยังไม่ได้บันทึก</span>
+            <span id="save-status" class="status-badge">⚡ Auto-Save เปิดอยู่</span>
         </header>
 
-        <!-- KPI Dashboard -->
         <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-title">นับแล้ว</div>
@@ -151,7 +151,6 @@
             </div>
         </div>
 
-        <!-- Controls -->
         <div class="control-panel">
             <div class="control-group">
                 <input type="date" id="record-date" onchange="onDateChange()">
@@ -169,17 +168,16 @@
                 </div>
             </div>
 
-            <div class="control-group desktop-only">
-                <button class="btn btn-success" onclick="saveData()">💾 บันทึก</button>
+            <div class="control-group desktop-block" style="display: none; gap: 6px;">
+                <button class="btn btn-line" onclick="copyLineSummary()">💬 สรุปส่ง LINE</button>
                 <button class="btn btn-outline" onclick="exportCSV()">📥 Excel</button>
-                <button class="btn btn-danger" onclick="deleteCurrentDateData()">🗑️ ลบ</button>
+                <button class="btn btn-outline" onclick="window.print()">🖨️ พิมพ์/PDF</button>
+                <button class="btn btn-danger" onclick="resetCurrentDateData()">🔄 เริ่มนับใหม่</button>
             </div>
         </div>
 
-        <!-- 📱 Mobile Card List View -->
         <div class="mobile-only mobile-card-list" id="mobile-card-container"></div>
 
-        <!-- 💻 Desktop Table View -->
         <div class="desktop-only table-card">
             <div class="table-wrapper">
                 <table>
@@ -201,10 +199,10 @@
         </div>
     </div>
 
-    <!-- 📱 Mobile Fixed Bottom Bar -->
     <div class="mobile-only mobile-bottom-bar">
-        <button class="btn btn-outline" onclick="exportCSV()" style="flex: 0.4;">📥</button>
-        <button class="btn btn-success" onclick="saveData()">💾 บันทึกข้อมูลวันนี้</button>
+        <button class="btn btn-line" onclick="copyLineSummary()">💬 สรุป LINE</button>
+        <button class="btn btn-outline" onclick="exportCSV()">📥 Excel</button>
+        <button class="btn btn-danger" onclick="resetCurrentDateData()">🔄 ล้างค่า</button>
     </div>
 
     <script>
@@ -227,7 +225,7 @@
             { id: 16, name: "คอฟฟี่เวิลด์ ผงนิชิโอะมัทฉะ", unitWeight: 1000 }
         ];
 
-        const STORAGE_PREFIX = "stock_record_v4_";
+        const STORAGE_PREFIX = "stock_record_v5_";
         let currentFilter = 'all';
         let formData = items.map(() => ({ full: '', rem: '', oh: '' }));
 
@@ -247,6 +245,7 @@
 
         function updateValue(index, field, value) {
             formData[index][field] = value;
+            autoSave();
             calculateAndRenderRow(index);
             updateKPI();
         }
@@ -255,7 +254,16 @@
             let current = parseFloat(formData[index][field]) || 0;
             let newVal = Math.max(0, current + step);
             formData[index][field] = newVal.toString();
+            autoSave();
             renderApp();
+        }
+
+        function autoSave() {
+            const dateStr = document.getElementById('record-date').value;
+            if (dateStr) {
+                localStorage.setItem(STORAGE_PREFIX + dateStr, JSON.stringify(formData));
+                updateHistoryDropdown();
+            }
         }
 
         function calculateAndRenderRow(index) {
@@ -320,7 +328,7 @@
 
                 // 📱 Render Mobile Card
                 const card = document.createElement('div');
-                card.className = 'item-card';
+                card.className = `item-card ${!isCounted ? 'uncounted' : ''}`;
                 card.innerHTML = `
                     <div class="item-card-header">
                         <div class="item-card-title">${item.id}. ${item.name}</div>
@@ -353,6 +361,7 @@
 
                 // 💻 Render Desktop Row
                 const tr = document.createElement('tr');
+                tr.className = !isCounted ? 'uncounted' : '';
                 tr.innerHTML = `
                     <td>${item.id}</td>
                     <td class="item-name">${item.name}</td>
@@ -401,24 +410,12 @@
             diffWeightEl.className = 'kpi-value ' + (totalDiffWeight < 0 ? 'danger' : (totalDiffWeight > 0 ? 'success' : ''));
         }
 
-        function saveData() {
-            const dateStr = document.getElementById('record-date').value;
-            if (!dateStr) return alert("กรุณาเลือกวันที่ก่อนบันทึก");
-
-            localStorage.setItem(STORAGE_PREFIX + dateStr, JSON.stringify(formData));
-            alert(`💾 บันทึกข้อมูลวันที่ ${dateStr} เรียบร้อย!`);
-            updateHistoryDropdown();
-            setStatusBadge(true);
-        }
-
         function loadDateData(dateStr) {
             const savedJSON = localStorage.getItem(STORAGE_PREFIX + dateStr);
             if (savedJSON) {
                 formData = JSON.parse(savedJSON);
-                setStatusBadge(true);
             } else {
                 formData = items.map(() => ({ full: '', rem: '', oh: '' }));
-                setStatusBadge(false);
             }
             renderApp();
         }
@@ -453,19 +450,48 @@
             });
         }
 
-        function deleteCurrentDateData() {
+        function resetCurrentDateData() {
             const dateStr = document.getElementById('record-date').value;
-            if (confirm(`คุณต้องการลบข้อมูลวันที่ ${dateStr} ใช่หรือไม่?`)) {
+            if (confirm(`คุณต้องการล้างข้อมูลนับสต็อกประจำวันที่ ${dateStr} เพื่อเริ่มนับใหม่ใช่หรือไม่?`)) {
                 localStorage.removeItem(STORAGE_PREFIX + dateStr);
+                formData = items.map(() => ({ full: '', rem: '', oh: '' }));
                 updateHistoryDropdown();
-                loadDateData(dateStr);
+                renderApp();
             }
         }
 
-        function setStatusBadge(isSaved) {
-            const badge = document.getElementById('save-status');
-            badge.innerText = isSaved ? "✓ บันทึกแล้ว" : "ยังไม่ได้บันทึก";
-            badge.style.background = isSaved ? "rgba(34, 197, 94, 0.25)" : "rgba(245, 158, 11, 0.25)";
+        function copyLineSummary() {
+            const dateStr = document.getElementById('record-date').value;
+            let text = `📦 **รายงานสรุปสต็อกสินค้า (${dateStr})**\n----------------------------\n`;
+            let diffItemsText = '';
+            let count = 0;
+
+            items.forEach((item, index) => {
+                const data = formData[index];
+                if (data.oh !== '') {
+                    const full = parseFloat(data.full) || 0;
+                    const rem = parseFloat(data.rem) || 0;
+                    const oh = parseFloat(data.oh) || 0;
+                    const totalActual = (full * item.unitWeight) + rem;
+                    const diff = totalActual - oh;
+
+                    if (diff !== 0) {
+                        count++;
+                        const symbol = diff > 0 ? '+' : '';
+                        diffItemsText += `${count}. ${item.name}: ${symbol}${diff.toLocaleString()} g\n`;
+                    }
+                }
+            });
+
+            if (count === 0) {
+                text += `✅ สินค้าทุกรายการตรงตามระบบทั้งหมด`;
+            } else {
+                text += `⚠️ รายการที่ไม่ตรง (${count} รายการ):\n` + diffItemsText;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('📋 คัดลอกสรุปเรียบร้อย! นำไปวางส่งในแชต LINE ได้เลยครับ');
+            });
         }
 
         function exportCSV() {
