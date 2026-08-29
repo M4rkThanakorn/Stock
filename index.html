@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ระบบนับสต็อกสินค้า</title>
+    <title>ระบบบริหารและนับสต็อกสินค้า</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         :root {
             --primary: #2563eb;
@@ -25,7 +26,7 @@
         }
 
         * { box-sizing: border-box; font-family: 'Sarabun', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-body); margin: 0; padding: 16px; color: var(--text-main); padding-bottom: 100px; }
+        body { background-color: var(--bg-body); margin: 0; padding: 16px; color: var(--text-main); padding-bottom: 110px; }
         .container { max-width: 1280px; margin: 0 auto; }
 
         /* Header */
@@ -56,15 +57,23 @@
             padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: white; outline: none; width: 100%;
         }
 
-        .filter-tabs { display: flex; background: #f1f5f9; padding: 3px; border-radius: 8px; gap: 4px; width: 100%; }
-        .tab-btn { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-muted); }
+        .filter-tabs { display: flex; background: #f1f5f9; padding: 3px; border-radius: 8px; gap: 4px; width: 100%; overflow-x: auto; }
+        .tab-btn { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-muted); white-space: nowrap; }
         .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 
         .btn { padding: 10px 14px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-primary { background-color: var(--primary); color: white; }
         .btn-success { background-color: var(--success); color: white; }
         .btn-line { background-color: #06c755; color: white; }
         .btn-outline { background-color: white; border: 1px solid var(--border); color: var(--text-main); }
         .btn-danger { background-color: #fee2e2; color: var(--danger); }
+
+        /* Camera Modal Scanner */
+        #scanner-modal {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; padding: 20px;
+        }
+        #interactive { width: 100%; max-width: 450px; background: white; border-radius: 12px; overflow: hidden; }
 
         /* 📱 Mobile UI */
         .desktop-only { display: none !important; }
@@ -76,6 +85,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: background-color 0.2s;
         }
         .item-card.uncounted { background-color: var(--uncounted-bg); border-color: #fef08a; }
+        .item-card.highlight { border: 2px solid var(--primary); box-shadow: 0 0 12px rgba(37, 99, 235, 0.3); }
         .item-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
         .item-card-title { font-weight: 700; font-size: 15px; color: var(--text-main); }
         .item-card-unit { font-size: 12px; color: var(--text-muted); background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
@@ -94,10 +104,10 @@
 
         .mobile-bottom-bar {
             position: fixed; bottom: 0; left: 0; right: 0; background: white;
-            border-top: 1px solid var(--border); padding: 12px 16px;
-            display: flex; gap: 8px; box-shadow: 0 -4px 12px rgba(0,0,0,0.08); z-index: 100;
+            border-top: 1px solid var(--border); padding: 10px 12px;
+            display: flex; gap: 6px; box-shadow: 0 -4px 12px rgba(0,0,0,0.08); z-index: 100;
         }
-        .mobile-bottom-bar .btn { flex: 1; height: 44px; font-size: 14px; }
+        .mobile-bottom-bar .btn { flex: 1; height: 44px; font-size: 13px; padding: 0 4px; }
 
         /* 💻 Desktop UI */
         @media (min-width: 768px) {
@@ -132,8 +142,8 @@
 <body>
     <div class="container">
         <header class="app-header">
-            <h1>📦 ระบบนับสต็อกสินค้า</h1>
-            <span id="save-status" class="status-badge">⚡ Auto-Save เปิดอยู่</span>
+            <h1>📦 ระบบบริหารสต็อกสินค้า</h1>
+            <span id="save-status" class="status-badge">⚡ Auto-Save</span>
         </header>
 
         <div class="kpi-grid">
@@ -154,24 +164,37 @@
         <div class="control-panel">
             <div class="control-group">
                 <input type="date" id="record-date" onchange="onDateChange()">
+                <input type="text" id="auditor-name" placeholder="👤 ชื่อผู้ตรวจนับ..." style="width: 140px;" oninput="saveAuditorName()">
                 <select id="history-select" onchange="loadFromHistory()">
                     <option value="">📂 ประวัติย้อนหลัง</option>
                 </select>
             </div>
 
             <div class="control-group">
-                <input type="text" id="search-input" placeholder="🔍 ค้นหาชื่อสินค้า..." oninput="renderApp()">
+                <div style="display: flex; gap: 6px; width: 100%;">
+                    <input type="text" id="search-input" placeholder="🔍 ค้นชื่อหรือบาร์โค้ด..." oninput="renderApp()">
+                    <button class="btn btn-primary" onclick="openScanner()" style="white-space: nowrap;">📷 สแกน</button>
+                </div>
+                
                 <div class="filter-tabs">
-                    <button class="tab-btn active" onclick="setFilter('all', this)">ทั้งหมด</button>
-                    <button class="tab-btn" onclick="setFilter('diff', this)">ไม่ตรง</button>
-                    <button class="tab-btn" onclick="setFilter('uncounted', this)">ยังไม่นับ</button>
+                    <button class="tab-btn active" onclick="setCatFilter('all', this)">ทั้งหมด</button>
+                    <button class="tab-btn" onclick="setCatFilter('tea', this)">ชา/ผง</button>
+                    <button class="tab-btn" onclick="setCatFilter('milk', this)">นม/ครีม</button>
+                    <button class="tab-btn" onclick="setCatFilter('other', this)">อื่นๆ</button>
+                </div>
+
+                <div class="filter-tabs">
+                    <button class="tab-btn active" onclick="setStatusFilter('all', this)">ทุกสถานะ</button>
+                    <button class="tab-btn" onclick="setStatusFilter('diff', this)">ไม่ตรง</button>
+                    <button class="tab-btn" onclick="setStatusFilter('uncounted', this)">ยังไม่นับ</button>
                 </div>
             </div>
 
             <div class="control-group desktop-block" style="display: none; gap: 6px;">
                 <button class="btn btn-line" onclick="copyLineSummary()">💬 สรุปส่ง LINE</button>
                 <button class="btn btn-outline" onclick="exportCSV()">📥 Excel</button>
-                <button class="btn btn-outline" onclick="window.print()">🖨️ พิมพ์/PDF</button>
+                <button class="btn btn-outline" onclick="exportJSONBackup()">💾 สำรองข้อมูล</button>
+                <button class="btn btn-outline" onclick="importJSONBackup()">📤 นำเข้าข้อมูล</button>
                 <button class="btn btn-danger" onclick="resetCurrentDateData()">🔄 เริ่มนับใหม่</button>
             </div>
         </div>
@@ -185,6 +208,7 @@
                         <tr>
                             <th style="width: 50px;">#</th>
                             <th style="text-align: left;">ชื่อสินค้า</th>
+                            <th>หมวดหมู่</th>
                             <th>น้ำหนัก/หน่วย</th>
                             <th>จำนวนเต็ม</th>
                             <th>เศษ (g)</th>
@@ -200,47 +224,70 @@
     </div>
 
     <div class="mobile-only mobile-bottom-bar">
+        <button class="btn btn-primary" onclick="openScanner()">📷 สแกน</button>
         <button class="btn btn-line" onclick="copyLineSummary()">💬 สรุป LINE</button>
         <button class="btn btn-outline" onclick="exportCSV()">📥 Excel</button>
         <button class="btn btn-danger" onclick="resetCurrentDateData()">🔄 ล้างค่า</button>
     </div>
 
+    <div id="scanner-modal">
+        <div id="interactive"></div>
+        <button class="btn btn-danger" onclick="closeScanner()" style="margin-top: 14px; width: 200px;">ปิดกล้อง</button>
+    </div>
+
+    <input type="file" id="import-file-input" style="display: none;" onchange="handleFileImport(event)" accept=".json">
+
     <script>
         const items = [
-            { id: 1, name: "คอฟฟี่เวิลด์ คาเฟ่ชาโบโรโบ", unitWeight: 500 },
-            { id: 2, name: "คอฟฟี่เวิลด์ มัทฉะ กรีนที", unitWeight: 500 },
-            { id: 3, name: "เอ็กซ์ตราบรอนซ์ ผงโกโก้", unitWeight: 1000 },
-            { id: 4, name: "ชาเอิร์ลเกรย์", unitWeight: 100 },
-            { id: 5, name: "ชาเขียวมะลิ", unitWeight: 500 },
-            { id: 6, name: "ชาผงปรุงสำเร็จ ชาตรามือ", unitWeight: 400 },
-            { id: 7, name: "ผงครีม", unitWeight: 1000 },
-            { id: 8, name: "คาเนชั่นนมข้นหวาน", unitWeight: 388 },
-            { id: 9, name: "คาเนชั่นนมข้นจืด", unitWeight: 405 },
-            { id: 10, name: "ส้มสไลด์เชื่อมอบแห้ง", unitWeight: 1000 },
-            { id: 11, name: "ผงพุดดิ้งนม", unitWeight: 1000 },
-            { id: 12, name: "ทรอปิค้า ลิง มะพร้าวน้ำหอมพร้อมปั่น", unitWeight: 185 },
-            { id: 13, name: "เมจินมสดรสจืด 2 ลิตร สำหรับชงกาแฟ-ชา", unitWeight: 2000 },
-            { id: 14, name: "ไข่มุกดำ", unitWeight: 1000 },
-            { id: 15, name: "น้ำเชื่อม", unitWeight: 5000 },
-            { id: 16, name: "คอฟฟี่เวิลด์ ผงนิชิโอะมัทฉะ", unitWeight: 1000 }
+            { id: 1, code: "101", cat: "tea", name: "คอฟฟี่เวิลด์ คาเฟ่ชาโบโรโบ", unitWeight: 500 },
+            { id: 2, code: "102", cat: "tea", name: "คอฟฟี่เวิลด์ มัทฉะ กรีนที", unitWeight: 500 },
+            { id: 3, code: "103", cat: "tea", name: "เอ็กซ์ตราบรอนซ์ ผงโกโก้", unitWeight: 1000 },
+            { id: 4, code: "104", cat: "tea", name: "ชาเอิร์ลเกรย์", unitWeight: 100 },
+            { id: 5, code: "105", cat: "tea", name: "ชาเขียวมะลิ", unitWeight: 500 },
+            { id: 6, code: "106", cat: "tea", name: "ชาผงปรุงสำเร็จ ชาตรามือ", unitWeight: 400 },
+            { id: 7, code: "107", cat: "milk", name: "ผงครีม", unitWeight: 1000 },
+            { id: 8, code: "108", cat: "milk", name: "คาเนชั่นนมข้นหวาน", unitWeight: 388 },
+            { id: 9, code: "109", cat: "milk", name: "คาเนชั่นนมข้นจืด", unitWeight: 405 },
+            { id: 10, code: "110", cat: "other", name: "ส้มสไลด์เชื่อมอบแห้ง", unitWeight: 1000 },
+            { id: 11, code: "111", cat: "other", name: "ผงพุดดิ้งนม", unitWeight: 1000 },
+            { id: 12, code: "112", cat: "other", name: "ทรอปิค้า ลิง มะพร้าวน้ำหอมพร้อมปั่น", unitWeight: 185 },
+            { id: 13, code: "113", cat: "milk", name: "เมจินมสดรสจืด 2 ลิตร สำหรับชงกาแฟ-ชา", unitWeight: 2000 },
+            { id: 14, code: "114", cat: "other", name: "ไข่มุกดำ", unitWeight: 1000 },
+            { id: 15, code: "115", cat: "other", name: "น้ำเชื่อม", unitWeight: 5000 },
+            { id: 16, code: "116", cat: "tea", name: "คอฟฟี่เวิลด์ ผงนิชิโอะมัทฉะ", unitWeight: 1000 }
         ];
 
-        const STORAGE_PREFIX = "stock_record_v5_";
-        let currentFilter = 'all';
+        const STORAGE_PREFIX = "stock_record_v6_";
+        let currentStatusFilter = 'all';
+        let currentCatFilter = 'all';
         let formData = items.map(() => ({ full: '', rem: '', oh: '' }));
+        let html5QrCode = null;
 
         window.onload = function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('record-date').value = today;
+            document.getElementById('auditor-name').value = localStorage.getItem('stock_auditor_name') || '';
             updateHistoryDropdown();
             loadDateData(today);
         };
 
-        function setFilter(filter, btn) {
-            currentFilter = filter;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        function setStatusFilter(filter, btn) {
+            currentStatusFilter = filter;
+            btn.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             renderApp();
+        }
+
+        function setCatFilter(filter, btn) {
+            currentCatFilter = filter;
+            btn.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderApp();
+        }
+
+        function saveAuditorName() {
+            const name = document.getElementById('auditor-name').value;
+            localStorage.setItem('stock_auditor_name', name);
         }
 
         function updateValue(index, field, value) {
@@ -284,7 +331,6 @@
                 diffClass = diff > 0 ? 'positive' : (diff < 0 ? 'negative' : 'zero');
             }
 
-            // Update Desktop UI
             const deskTotal = document.getElementById(`desk-total-${index}`);
             const deskDiff = document.getElementById(`desk-diff-${index}`);
             if (deskTotal) deskTotal.innerText = totalActual.toLocaleString() + ' g';
@@ -293,7 +339,6 @@
                 deskDiff.className = `diff-tag ${diffClass}`;
             }
 
-            // Update Mobile UI
             const mobTotal = document.getElementById(`mob-total-${index}`);
             const mobDiff = document.getElementById(`mob-diff-${index}`);
             if (mobTotal) mobTotal.innerText = totalActual.toLocaleString() + ' g';
@@ -322,12 +367,19 @@
                 const isCounted = data.full !== '' || data.rem !== '';
                 const hasDiff = data.oh !== '' && diff !== 0;
 
-                if (search && !item.name.toLowerCase().includes(search)) return;
-                if (currentFilter === 'diff' && !hasDiff) return;
-                if (currentFilter === 'uncounted' && isCounted) return;
+                // Category Filter
+                if (currentCatFilter !== 'all' && item.cat !== currentCatFilter) return;
+
+                // Status Filter
+                if (currentStatusFilter === 'diff' && !hasDiff) return;
+                if (currentStatusFilter === 'uncounted' && isCounted) return;
+
+                // Search Filter (Name or Barcode/Code)
+                if (search && !item.name.toLowerCase().includes(search) && !item.code.toLowerCase().includes(search)) return;
 
                 // 📱 Render Mobile Card
                 const card = document.createElement('div');
+                card.id = `mob-card-${index}`;
                 card.className = `item-card ${!isCounted ? 'uncounted' : ''}`;
                 card.innerHTML = `
                     <div class="item-card-header">
@@ -365,6 +417,7 @@
                 tr.innerHTML = `
                     <td>${item.id}</td>
                     <td class="item-name">${item.name}</td>
+                    <td><span class="item-card-unit">${getCatLabel(item.cat)}</span></td>
                     <td>${item.unitWeight.toLocaleString()} g</td>
                     <td><input type="number" value="${data.full}" placeholder="0" oninput="updateValue(${index}, 'full', this.value)"></td>
                     <td><input type="number" value="${data.rem}" placeholder="0" oninput="updateValue(${index}, 'rem', this.value)"></td>
@@ -378,6 +431,12 @@
             });
 
             updateKPI();
+        }
+
+        function getCatLabel(cat) {
+            if (cat === 'tea') return 'ชา/ผง';
+            if (cat === 'milk') return 'นม/ครีม';
+            return 'อื่นๆ';
         }
 
         function updateKPI() {
@@ -452,7 +511,7 @@
 
         function resetCurrentDateData() {
             const dateStr = document.getElementById('record-date').value;
-            if (confirm(`คุณต้องการล้างข้อมูลนับสต็อกประจำวันที่ ${dateStr} เพื่อเริ่มนับใหม่ใช่หรือไม่?`)) {
+            if (confirm(`คุณต้องการล้างข้อมูลนับสต็อกประจำวันที่ ${dateStr} ใช่หรือไม่?`)) {
                 localStorage.removeItem(STORAGE_PREFIX + dateStr);
                 formData = items.map(() => ({ full: '', rem: '', oh: '' }));
                 updateHistoryDropdown();
@@ -460,9 +519,48 @@
             }
         }
 
+        /* 📷 Camera Scanner Functions */
+        function openScanner() {
+            document.getElementById('scanner-modal').style.display = 'flex';
+            html5QrCode = new Html5Qrcode("interactive");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                (decodedText) => {
+                    closeScanner();
+                    document.getElementById('search-input').value = decodedText;
+                    renderApp();
+                    // Auto scroll to item on mobile
+                    const foundIndex = items.findIndex(i => i.code === decodedText || i.name.includes(decodedText));
+                    if (foundIndex !== -1) {
+                        const targetCard = document.getElementById(`mob-card-${foundIndex}`);
+                        if (targetCard) {
+                            targetCard.classList.add('highlight');
+                            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                },
+                (errorMessage) => {}
+            ).catch(err => alert("ไม่สามารถเปิดกล้องได้: " + err));
+        }
+
+        function closeScanner() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('scanner-modal').style.display = 'none';
+                }).catch(() => {
+                    document.getElementById('scanner-modal').style.display = 'none';
+                });
+            } else {
+                document.getElementById('scanner-modal').style.display = 'none';
+            }
+        }
+
+        /* 💬 LINE Summary */
         function copyLineSummary() {
             const dateStr = document.getElementById('record-date').value;
-            let text = `📦 **รายงานสรุปสต็อกสินค้า (${dateStr})**\n----------------------------\n`;
+            const auditor = document.getElementById('auditor-name').value || 'ไม่ได้ระบุ';
+            let text = `📦 **รายงานสต็อกประจำวันที่ (${dateStr})**\n👤 ผู้ตรวจนับ: ${auditor}\n----------------------------\n`;
             let diffItemsText = '';
             let count = 0;
 
@@ -483,20 +581,16 @@
                 }
             });
 
-            if (count === 0) {
-                text += `✅ สินค้าทุกรายการตรงตามระบบทั้งหมด`;
-            } else {
-                text += `⚠️ รายการที่ไม่ตรง (${count} รายการ):\n` + diffItemsText;
-            }
+            text += (count === 0) ? `✅ สินค้าทุกรายการตรงตามระบบ` : `⚠️ ไม่ตรง (${count} รายการ):\n` + diffItemsText;
 
-            navigator.clipboard.writeText(text).then(() => {
-                alert('📋 คัดลอกสรุปเรียบร้อย! นำไปวางส่งในแชต LINE ได้เลยครับ');
-            });
+            navigator.clipboard.writeText(text).then(() => alert('📋 คัดลอกสรุปเรียบร้อย! นำไปวางส่งในแชต LINE ได้เลย'));
         }
 
+        /* 📥 Export CSV */
         function exportCSV() {
             const dateStr = document.getElementById('record-date').value;
-            let csv = '\uFEFFข้อที่,ชื่อสินค้า,น้ำหนักต่อหน่วย(g),จำนวนเต็ม,เศษ(g),ยอดรวมนับจริง(g),ยอดในระบบ(g),ผลต่างDiff(g)\n';
+            const auditor = document.getElementById('auditor-name').value || 'ไม่ได้ระบุ';
+            let csv = `\uFEFFผู้ตรวจนับ:,${auditor},วันที่:,${dateStr}\nข้อที่,ชื่อสินค้า,หมวดหมู่,น้ำหนักต่อหน่วย(g),จำนวนเต็ม,เศษ(g),ยอดนับจริง(g),ยอดระบบ(g),ผลต่างDiff(g)\n`;
 
             items.forEach((item, index) => {
                 const data = formData[index];
@@ -506,7 +600,7 @@
                 const totalActual = (full * item.unitWeight) + rem;
                 const diff = totalActual - oh;
 
-                csv += `"${item.id}","${item.name}","${item.unitWeight}","${full}","${rem}","${totalActual}","${oh}","${diff}"\n`;
+                csv += `"${item.id}","${item.name}","${getCatLabel(item.cat)}","${item.unitWeight}","${full}","${rem}","${totalActual}","${oh}","${diff}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -514,6 +608,47 @@
             link.href = URL.createObjectURL(blob);
             link.download = `รายงานสต็อก_${dateStr}.csv`;
             link.click();
+        }
+
+        /* 💾 Backup & Restore JSON */
+        function exportJSONBackup() {
+            const backupData = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith(STORAGE_PREFIX)) {
+                    backupData[key] = localStorage.getItem(key);
+                }
+            }
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Stock_Backup_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        function importJSONBackup() {
+            document.getElementById('import-file-input').click();
+        }
+
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    Object.keys(importedData).forEach(key => {
+                        localStorage.setItem(key, importedData[key]);
+                    });
+                    alert('📤 นำเข้าข้อมูลสำรองสำเร็จ!');
+                    updateHistoryDropdown();
+                    onDateChange();
+                } catch (err) {
+                    alert('❌ ไฟล์ไม่ถูกต้อง');
+                }
+            };
+            reader.readAsText(file);
         }
     </script>
 </body>
