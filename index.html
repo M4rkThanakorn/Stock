@@ -4,99 +4,183 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบบันทึกและคำนวณนับสต็อกสินค้า</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        body { background-color: #f1f5f9; margin: 0; padding: 16px; color: #1e293b; }
-        .container { max-width: 1200px; margin: 0 auto; background: #ffffff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        h2 { color: #0f172a; margin-top: 0; text-align: center; font-size: 1.6rem; }
-        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-body: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+        }
+
+        * { box-sizing: border-box; font-family: 'Sarabun', sans-serif; }
+        body { background-color: var(--bg-body); margin: 0; padding: 20px 12px; color: var(--text-main); }
+        .container { max-width: 1280px; margin: 0 auto; }
+
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white; padding: 24px; border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
+            margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;
+        }
+        .app-header h1 { margin: 0; font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(4px); }
+
+        /* KPI Dashboard Cards */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .kpi-card { background: var(--card-bg); padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .kpi-title { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+        .kpi-value { font-size: 1.8rem; font-weight: 700; color: var(--text-main); }
+        .kpi-value.danger { color: var(--danger); }
+        .kpi-value.success { color: var(--success); }
+
         /* Control Panel */
         .control-panel {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            background-color: #f8fafc;
-            padding: 16px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
+            background: var(--card-bg); padding: 20px; border-radius: 12px;
+            border: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 16px;
+            justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
-        .control-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .control-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         label { font-weight: 600; font-size: 14px; color: #334155; }
-        input[type="date"], select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; }
-        
-        /* Buttons */
-        .btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
-        .btn-primary { background-color: #2563eb; color: white; }
-        .btn-primary:hover { background-color: #1d4ed8; }
-        .btn-success { background-color: #16a34a; color: white; }
+        input[type="date"], select, input[type="text"] {
+            padding: 9px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: white; outline: none; transition: 0.2s;
+        }
+        input[type="date"]:focus, select:focus, input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+
+        /* Filter Tabs */
+        .filter-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px; gap: 4px; }
+        .tab-btn { padding: 6px 12px; border: none; background: transparent; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
+        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+        /* Action Buttons */
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn { padding: 9px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+        .btn-success { background-color: var(--success); color: white; }
         .btn-success:hover { background-color: #15803d; }
-        .btn-danger { background-color: #dc2626; color: white; }
-        .btn-danger:hover { background-color: #b91c1c; }
-        
-        /* Table */
-        .table-wrapper { overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; font-size: 14px; }
-        th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: center; }
-        th { background-color: #1e3a8a; color: #ffffff; font-weight: 600; white-space: nowrap; }
+        .btn-outline { background-color: white; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background-color: #f8fafc; border-color: #94a3b8; }
+        .btn-danger { background-color: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+        .btn-danger:hover { background-color: #fee2e2; }
+
+        /* Main Table */
+        .table-card { background: var(--card-bg); border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .table-wrapper { overflow-x: auto; max-height: 65vh; }
+        table { width: 100%; border-collapse: collapse; min-width: 980px; font-size: 14px; }
+        th { background-color: #0f172a; color: #ffffff; font-weight: 600; padding: 12px 10px; text-align: center; position: sticky; top: 0; z-index: 10; font-size: 13px; letter-spacing: 0.3px; }
+        td { border-bottom: 1px solid #f1f5f9; padding: 10px; text-align: center; vertical-align: middle; }
         tr:nth-child(even) { background-color: #f8fafc; }
         tr:hover { background-color: #f1f5f9; }
-        td.item-name { text-align: left; font-weight: 500; }
-        input[type="number"] { width: 100%; padding: 6px; border: 1px solid #94a3b8; border-radius: 4px; text-align: right; font-size: 14px; }
-        input[type="number"]:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
-        .total-actual { font-weight: bold; background-color: #e2e8f0; color: #0f172a; }
-        .diff { font-weight: bold; }
-        .diff.positive { color: #16a34a; }
-        .diff.negative { color: #dc2626; }
-        
-        /* Status Banner */
-        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
-        .status-badge.saved { background-color: #dcfce7; color: #15803d; }
-        .status-badge.new { background-color: #fef3c7; color: #b45309; }
+        td.item-name { text-align: left; font-weight: 600; color: #1e293b; }
+        .unit-badge { font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #475569; font-weight: 500; margin-left: 6px; }
+
+        /* Quantity Stepper (Mobile Friendly) */
+        .stepper { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: white; }
+        .stepper button { border: none; background: #f8fafc; width: 28px; height: 32px; font-weight: bold; cursor: pointer; color: #475569; transition: 0.1s; }
+        .stepper button:hover { background: #e2e8f0; color: #0f172a; }
+        .stepper input { width: 55px; border: none; text-align: center; font-weight: 600; font-size: 14px; outline: none; padding: 4px; }
+
+        /* Output Cells */
+        .total-actual { font-weight: 700; background-color: #f1f5f9; color: #0f172a; border-radius: 6px; padding: 6px 8px; }
+        .diff-tag { display: inline-block; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 13px; }
+        .diff-tag.positive { background-color: #dcfce7; color: #15803d; }
+        .diff-tag.negative { background-color: #fee2e2; color: #b91c1c; }
+        .diff-tag.zero { background-color: #f1f5f9; color: #64748b; }
+
+        /* Print Media Styles */
+        @media print {
+            body { background: white; padding: 0; }
+            .control-panel, .kpi-grid, .btn-group, .filter-tabs, .app-header span { display: none !important; }
+            .container { max-width: 100%; }
+            .table-card { border: none; box-shadow: none; }
+            .table-wrapper { max-height: none; overflow: visible; }
+            th { background-color: #1e293b !important; color: white !important; }
+            .stepper button { display: none; }
+            .stepper input { border: none; width: auto; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>ระบบบันทึกและคำนวณนับสต็อกสินค้า</h2>
-        
+        <!-- App Header -->
+        <header class="app-header">
+            <h1>📦 ระบบบันทึกสต็อกสินค้าออนไลน์</h1>
+            <span id="save-status" class="status-badge">ยังไม่ได้บันทึก</span>
+        </header>
+
+        <!-- KPI Dashboard Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">📋 นับแล้ว / ทั้งหมด</div>
+                <div class="kpi-value" id="kpi-counted">0 / 16</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">⚠️ สินค้าที่มีผลต่าง (ไม่ตรง)</div>
+                <div class="kpi-value danger" id="kpi-diff-count">0 รายการ</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">⚖️ น้ำหนักรวมผลต่าง (Diff Total)</div>
+                <div class="kpi-value" id="kpi-diff-weight">0 g</div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
         <div class="control-panel">
             <div class="control-group">
                 <label for="record-date">📅 วันที่บันทึก:</label>
                 <input type="date" id="record-date" onchange="onDateChange()">
-                <span id="save-status" class="status-badge new">รายการใหม่</span>
-            </div>
-
-            <div class="control-group">
-                <label for="history-select">📂 ประวัติการบันทึก:</label>
+                
                 <select id="history-select" onchange="loadFromHistory()">
-                    <option value="">-- เลือกวันที่เคยบันทึก --</option>
+                    <option value="">📂 ประวัติย้อนหลัง</option>
                 </select>
             </div>
 
             <div class="control-group">
+                <input type="text" id="search-input" placeholder="🔍 ค้นหาชื่อสินค้า..." oninput="renderTable()">
+                <div class="filter-tabs">
+                    <button class="tab-btn active" onclick="setFilter('all', this)">ทั้งหมด</button>
+                    <button class="tab-btn" onclick="setFilter('diff', this)">เฉพาะที่ไม่ตรง</button>
+                    <button class="tab-btn" onclick="setFilter('uncounted', this)">ยังไม่ได้นับ</button>
+                </div>
+            </div>
+
+            <div class="btn-group">
                 <button class="btn btn-success" onclick="saveData()">💾 บันทึกข้อมูล</button>
-                <button class="btn btn-danger" onclick="deleteCurrentDateData()">🗑️ ลบข้อมูลของวันนี้</button>
+                <button class="btn btn-outline" onclick="exportCSV()">📥 ส่งออก Excel</button>
+                <button class="btn btn-outline" onclick="window.print()">🖨️ พิมพ์</button>
+                <button class="btn btn-danger" onclick="deleteCurrentDateData()">🗑️ ลบ</button>
             </div>
         </div>
 
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 50px;">ข้อที่</th>
-                        <th>ชื่อสินค้า</th>
-                        <th style="width: 140px;">จำนวนเต็ม<br>(ถุง/ขวด/กระป๋อง)</th>
-                        <th style="width: 120px;">เศษ (กรัม)</th>
-                        <th style="width: 130px;">น้ำหนักต่อหน่วย (g)</th>
-                        <th style="width: 150px;">ยอดรวมน้ำหนักจริง (g)</th>
-                        <th style="width: 140px;">ยอดในระบบ (OH)</th>
-                        <th style="width: 120px;">ผลต่าง (Diff)</th>
-                    </tr>
-                </thead>
-                <tbody id="stock-tbody"></tbody>
-            </table>
+        <!-- Data Table -->
+        <div class="table-card">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th style="text-align: left;">ชื่อสินค้า</th>
+                            <th style="width: 110px;">น้ำหนัก/หน่วย</th>
+                            <th style="width: 150px;">จำนวนเต็ม (หน่วย)</th>
+                            <th style="width: 120px;">เศษ (กรัม)</th>
+                            <th style="width: 150px;">ยอดนับจริง (g)</th>
+                            <th style="width: 130px;">ยอดในระบบ (OH)</th>
+                            <th style="width: 130px;">ผลต่าง (Diff)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-tbody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -120,114 +204,206 @@
             { id: 16, name: "คอฟฟี่เวิลด์ ผงนิชิโอะมัทฉะ", unitWeight: 1000 }
         ];
 
-        const STORAGE_PREFIX = "stock_record_";
+        const STORAGE_PREFIX = "stock_record_v3_";
+        let currentFilter = 'all';
 
-        // เริ่มต้นระบบ
         window.onload = function() {
-            // ตั้งค่าวันที่ปัจจุบันเป็นค่าเริ่มต้น
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('record-date').value = today;
-            
             renderTable();
             updateHistoryDropdown();
             loadDateData(today);
         };
 
-        // วาดตารางสินค้า
-        function renderTable() {
-            const tbody = document.getElementById('stock-tbody');
-            tbody.innerHTML = items.map((item, index) => `
-                <tr>
-                    <td>${item.id}</td>
-                    <td class="item-name">${item.name}</td>
-                    <td><input type="number" id="full-${index}" min="0" placeholder="0" oninput="calculate(${index})"></td>
-                    <td><input type="number" id="rem-${index}" min="0" placeholder="0" oninput="calculate(${index})"></td>
-                    <td>${item.unitWeight.toLocaleString()}</td>
-                    <td class="total-actual" id="total-${index}">0</td>
-                    <td><input type="number" id="oh-${index}" placeholder="0" oninput="calculate(${index})"></td>
-                    <td class="diff" id="diff-${index}">0</td>
-                </tr>
-            `).join('');
+        function setFilter(filter, btn) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderTable();
         }
 
-        // คำนวณแต่ละแถว
-        function calculate(index) {
-            const full = parseFloat(document.getElementById(`full-${index}`).value) || 0;
+        function renderTable() {
+            const tbody = document.getElementById('stock-tbody');
+            const search = document.getElementById('search-input').value.toLowerCase();
+
+            // ดึงค่าเดิมของ input ไว้กันหายตอน re-render
+            const currentInputs = items.map((_, i) => ({
+                full: document.getElementById(`full-${i}`)?.value || '',
+                rem: document.getElementById(`rem-${i}`)?.value || '',
+                oh: document.getElementById(`oh-${i}`)?.value || ''
+            }));
+
+            tbody.innerHTML = '';
+
+            items.forEach((item, index) => {
+                const fullVal = currentInputs[index].full;
+                const remVal = currentInputs[index].rem;
+                const ohVal = currentInputs[index].oh;
+
+                const full = parseFloat(fullVal) || 0;
+                const rem = parseFloat(remVal) || 0;
+                const oh = parseFloat(ohVal) || 0;
+                const totalActual = (full * item.unitWeight) + rem;
+                const diff = totalActual - oh;
+
+                const isCounted = fullVal !== '' || remVal !== '';
+                const hasDiff = ohVal !== '' && diff !== 0;
+
+                // กรองข้อมูล
+                if (search && !item.name.toLowerCase().includes(search)) return;
+                if (currentFilter === 'diff' && !hasDiff) return;
+                if (currentFilter === 'uncounted' && isCounted) return;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.id}</td>
+                    <td class="item-name">${item.name}</td>
+                    <td>${item.unitWeight.toLocaleString()} g</td>
+                    <td>
+                        <div class="stepper">
+                            <button onclick="stepInput(${index}, 'full', -1)">-</button>
+                            <input type="number" id="full-${index}" value="${fullVal}" min="0" placeholder="0" oninput="calculate(${index})">
+                            <button onclick="stepInput(${index}, 'full', 1)">+</button>
+                        </div>
+                    </td>
+                    <td>
+                        <input type="number" id="rem-${index}" value="${remVal}" min="0" placeholder="0" style="width: 80px;" oninput="calculate(${index})">
+                    </td>
+                    <td><div class="total-actual" id="total-${index}">0</div></td>
+                    <td>
+                        <input type="number" id="oh-${index}" value="${ohVal}" placeholder="0" style="width: 90px;" oninput="calculate(${index})">
+                    </td>
+                    <td><span class="diff-tag zero" id="diff-${index}">0</span></td>
+                `;
+                tbody.appendChild(tr);
+
+                calculate(index, false);
+            });
+
+            updateKPI();
+        }
+
+        function stepInput(index, field, step) {
+            const input = document.getElementById(`${field}-${index}`);
+            if (!input) return;
+            let val = parseInt(input.value) || 0;
+            val = Math.max(0, val + step);
+            input.value = val;
+            calculate(index);
+        }
+
+        function calculate(index, updateKpiFlag = true) {
+            const fullInput = document.getElementById(`full-${index}`);
+            if (!fullInput) return;
+
+            const full = parseFloat(fullInput.value) || 0;
             const rem = parseFloat(document.getElementById(`rem-${index}`).value) || 0;
             const ohInput = document.getElementById(`oh-${index}`).value;
             const unitWeight = items[index].unitWeight;
 
-            // ยอดรวมน้ำหนักจริง = (จำนวนเต็ม * น้ำหนักต่อหน่วย) + เศษ
             const totalActual = (full * unitWeight) + rem;
-            document.getElementById(`total-${index}`).innerText = totalActual.toLocaleString();
+            document.getElementById(`total-${index}`).innerText = totalActual.toLocaleString() + ' g';
 
-            // ผลต่าง (Diff) = ยอดรวมน้ำหนักจริง - ยอดในระบบ (OH)
             const diffElem = document.getElementById(`diff-${index}`);
             if (ohInput !== '') {
                 const oh = parseFloat(ohInput) || 0;
                 const diff = totalActual - oh;
-                diffElem.innerText = (diff > 0 ? '+' : '') + diff.toLocaleString();
-                diffElem.className = 'diff ' + (diff > 0 ? 'positive' : (diff < 0 ? 'negative' : ''));
+                diffElem.innerText = (diff > 0 ? '+' : '') + diff.toLocaleString() + ' g';
+                diffElem.className = 'diff-tag ' + (diff > 0 ? 'positive' : (diff < 0 ? 'negative' : 'zero'));
             } else {
-                diffElem.innerText = '0';
-                diffElem.className = 'diff';
+                diffElem.innerText = '0 g';
+                diffElem.className = 'diff-tag zero';
             }
+
+            if (updateKpiFlag) updateKPI();
         }
 
-        // บันทึกข้อมูลลง LocalStorage
+        function updateKPI() {
+            let counted = 0;
+            let diffCount = 0;
+            let totalDiffWeight = 0;
+
+            items.forEach((item, index) => {
+                const fullEl = document.getElementById(`full-${index}`);
+                const remEl = document.getElementById(`rem-${index}`);
+                const ohEl = document.getElementById(`oh-${index}`);
+
+                const fullVal = fullEl ? fullEl.value : '';
+                const remVal = remEl ? remEl.value : '';
+                const ohVal = ohEl ? ohEl.value : '';
+
+                if (fullVal !== '' || remVal !== '') counted++;
+
+                if (ohVal !== '') {
+                    const full = parseFloat(fullVal) || 0;
+                    const rem = parseFloat(remVal) || 0;
+                    const oh = parseFloat(ohVal) || 0;
+                    const diff = ((full * item.unitWeight) + rem) - oh;
+
+                    if (diff !== 0) {
+                        diffCount++;
+                        totalDiffWeight += diff;
+                    }
+                }
+            });
+
+            document.getElementById('kpi-counted').innerText = `${counted} / ${items.length}`;
+            document.getElementById('kpi-diff-count').innerText = `${diffCount} รายการ`;
+            
+            const diffWeightEl = document.getElementById('kpi-diff-weight');
+            diffWeightEl.innerText = (totalDiffWeight > 0 ? '+' : '') + totalDiffWeight.toLocaleString() + ' g';
+            diffWeightEl.className = 'kpi-value ' + (totalDiffWeight < 0 ? 'danger' : (totalDiffWeight > 0 ? 'success' : ''));
+        }
+
         function saveData() {
             const dateStr = document.getElementById('record-date').value;
-            if (!dateStr) {
-                alert("กรุณาเลือกวันที่ก่อนบันทึกข้อมูล");
-                return;
-            }
+            if (!dateStr) return alert("กรุณาเลือกวันที่ก่อนบันทึก");
 
-            const recordData = items.map((item, index) => ({
-                full: document.getElementById(`full-${index}`).value,
-                rem: document.getElementById(`rem-${index}`).value,
-                oh: document.getElementById(`oh-${index}`).value
+            const recordData = items.map((_, index) => ({
+                full: document.getElementById(`full-${index}`)?.value || '',
+                rem: document.getElementById(`rem-${index}`)?.value || '',
+                oh: document.getElementById(`oh-${index}`)?.value || ''
             }));
 
             localStorage.setItem(STORAGE_PREFIX + dateStr, JSON.stringify(recordData));
-            alert(`บันทึกข้อมูลประจำวันที่ ${dateStr} เรียบร้อยแล้ว`);
-            
+            alert(`💾 บันทึกข้อมูลวันที่ ${dateStr} สำเร็จ!`);
             updateHistoryDropdown();
             setStatusBadge(true);
         }
 
-        // โหลดข้อมูลตามวันที่
         function loadDateData(dateStr) {
             const savedJSON = localStorage.getItem(STORAGE_PREFIX + dateStr);
-            
             if (savedJSON) {
                 const recordData = JSON.parse(savedJSON);
                 recordData.forEach((data, index) => {
-                    document.getElementById(`full-${index}`).value = data.full || '';
-                    document.getElementById(`rem-${index}`).value = data.rem || '';
-                    document.getElementById(`oh-${index}`).value = data.oh || '';
-                    calculate(index);
+                    if (document.getElementById(`full-${index}`)) {
+                        document.getElementById(`full-${index}`).value = data.full || '';
+                        document.getElementById(`rem-${index}`).value = data.rem || '';
+                        document.getElementById(`oh-${index}`).value = data.oh || '';
+                        calculate(index, false);
+                    }
                 });
                 setStatusBadge(true);
             } else {
-                // ถ้าไม่มีข้อมูล ให้ล้างค่าในตาราง
                 items.forEach((_, index) => {
-                    document.getElementById(`full-${index}`).value = '';
-                    document.getElementById(`rem-${index}`).value = '';
-                    document.getElementById(`oh-${index}`).value = '';
-                    calculate(index);
+                    if (document.getElementById(`full-${index}`)) {
+                        document.getElementById(`full-${index}`).value = '';
+                        document.getElementById(`rem-${index}`).value = '';
+                        document.getElementById(`oh-${index}`).value = '';
+                        calculate(index, false);
+                    }
                 });
                 setStatusBadge(false);
             }
+            updateKPI();
         }
 
-        // เมื่อเปลี่ยนวันที่ในช่อง Calendar
         function onDateChange() {
             const dateStr = document.getElementById('record-date').value;
             document.getElementById('history-select').value = dateStr;
             loadDateData(dateStr);
         }
 
-        // เมื่อเลือกวันที่จากประวัติการบันทึก
         function loadFromHistory() {
             const selectedDate = document.getElementById('history-select').value;
             if (selectedDate) {
@@ -236,57 +412,56 @@
             }
         }
 
-        // อัปเดตรายชื่อวันที่ใน Dropdown ประวัติ
         function updateHistoryDropdown() {
             const select = document.getElementById('history-select');
-            select.innerHTML = '<option value="">-- เลือกวันที่เคยบันทึก --</option>';
-
+            select.innerHTML = '<option value="">📂 ประวัติย้อนหลัง</option>';
             const dates = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key.startsWith(STORAGE_PREFIX)) {
-                    dates.push(key.replace(STORAGE_PREFIX, ''));
-                }
+                if (key.startsWith(STORAGE_PREFIX)) dates.push(key.replace(STORAGE_PREFIX, ''));
             }
-
-            // เรียงวันที่จากล่าสุดไปเก่าสุด
-            dates.sort().reverse();
-
-            dates.forEach(date => {
+            dates.sort().reverse().forEach(date => {
                 const option = document.createElement('option');
                 option.value = date;
                 option.textContent = date;
                 select.appendChild(option);
             });
-
-            // ตรวจสอบว่าเลือกตรงกับวันที่ปัจจุบันหรือไม่
-            const currentDate = document.getElementById('record-date').value;
-            select.value = dates.includes(currentDate) ? currentDate : '';
         }
 
-        // ลบข้อมูลของวันที่กำลังเลือก
         function deleteCurrentDateData() {
             const dateStr = document.getElementById('record-date').value;
-            if (!dateStr) return;
-
-            if (confirm(`คุณต้องการลบข้อมูลประจำวันที่ ${dateStr} ใช่หรือไม่?`)) {
+            if (confirm(`คุณต้องการลบข้อมูลวันที่ ${dateStr} ใช่หรือไม่?`)) {
                 localStorage.removeItem(STORAGE_PREFIX + dateStr);
-                alert(`ลบข้อมูลวันที่ ${dateStr} แล้ว`);
                 updateHistoryDropdown();
                 loadDateData(dateStr);
             }
         }
 
-        // แสดงสถานะ บันทึกแล้ว / รายการใหม่
         function setStatusBadge(isSaved) {
             const badge = document.getElementById('save-status');
-            if (isSaved) {
-                badge.innerText = "บันทึกแล้ว (แก้ไขได้)";
-                badge.className = "status-badge saved";
-            } else {
-                badge.innerText = "ยังไม่ได้บันทึก";
-                badge.className = "status-badge new";
-            }
+            badge.innerText = isSaved ? "✓ บันทึกแล้ว" : "ยังไม่ได้บันทึก";
+            badge.style.background = isSaved ? "rgba(34, 197, 94, 0.25)" : "rgba(245, 158, 11, 0.25)";
+        }
+
+        function exportCSV() {
+            const dateStr = document.getElementById('record-date').value;
+            let csv = '\uFEFFข้อที่,ชื่อสินค้า,น้ำหนักต่อหน่วย(g),จำนวนเต็ม,เศษ(g),ยอดรวมนับจริง(g),ยอดในระบบ(g),ผลต่างDiff(g)\n';
+
+            items.forEach((item, index) => {
+                const full = parseFloat(document.getElementById(`full-${index}`)?.value) || 0;
+                const rem = parseFloat(document.getElementById(`rem-${index}`)?.value) || 0;
+                const oh = parseFloat(document.getElementById(`oh-${index}`)?.value) || 0;
+                const totalActual = (full * item.unitWeight) + rem;
+                const diff = totalActual - oh;
+
+                csv += `"${item.id}","${item.name}","${item.unitWeight}","${full}","${rem}","${totalActual}","${oh}","${diff}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `รายงานสต็อก_${dateStr}.csv`;
+            link.click();
         }
     </script>
 </body>
