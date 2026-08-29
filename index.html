@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบคำนวณนับสต็อกสินค้า</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: #f1f5f9; margin: 0; padding: 16px; color: #1e293b; }
+        .container { max-width: 1200px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        h2 { color: #0f172a; margin-top: 0; text-align: center; font-size: 1.5rem; }
+        .table-wrapper { overflow-x: auto; margin-top: 16px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; font-size: 14px; }
+        th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: center; }
+        th { background-color: #1e3a8a; color: #ffffff; font-weight: 600; white-space: nowrap; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        tr:hover { background-color: #f1f5f9; }
+        td.item-name { text-align: left; font-weight: 500; }
+        input[type="number"] { width: 100%; padding: 6px; border: 1px solid #94a3b8; border-radius: 4px; text-align: right; font-size: 14px; }
+        input[type="number"]:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
+        .total-actual { font-weight: bold; background-color: #e2e8f0; color: #0f172a; }
+        .diff { font-weight: bold; }
+        .diff.positive { color: #16a34a; }
+        .diff.negative { color: #dc2626; }
+        .btn-reset { display: block; margin: 20px 0 0 auto; padding: 10px 20px; background-color: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-reset:hover { background-color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>ตารางคำนวณนับสต็อกสินค้า</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">ข้อที่</th>
+                        <th>ชื่อสินค้า</th>
+                        <th style="width: 140px;">จำนวนเต็ม<br>(ถุง/ขวด/กระป๋อง)</th>
+                        <th style="width: 120px;">เศษ (กรัม)</th>
+                        <th style="width: 130px;">น้ำหนักต่อหน่วย (g)</th>
+                        <th style="width: 150px;">ยอดรวมน้ำหนักจริง (g)</th>
+                        <th style="width: 140px;">ยอดในระบบ (OH)</th>
+                        <th style="width: 120px;">ผลต่าง (Diff)</th>
+                    </tr>
+                </thead>
+                <tbody id="stock-tbody"></tbody>
+            </table>
+        </div>
+        <button class="btn-reset" onclick="resetForm()">ล้างข้อมูลทั้งหมด</button>
+    </div>
+
+    <script>
+        const items = [
+            { id: 1, name: "คอฟฟี่เวิลด์ คาเฟ่ชาโบโรโบ", unitWeight: 500 },
+            { id: 2, name: "คอฟฟี่เวิลด์ มัทฉะ กรีนที", unitWeight: 500 },
+            { id: 3, name: "เอ็กซ์ตราบรอนซ์ ผงโกโก้", unitWeight: 1000 },
+            { id: 4, name: "ชาเอิร์ลเกรย์", unitWeight: 100 },
+            { id: 5, name: "ชาเขียวมะลิ", unitWeight: 500 },
+            { id: 6, name: "ชาผงปรุงสำเร็จ ชาตรามือ", unitWeight: 400 },
+            { id: 7, name: "ผงครีม", unitWeight: 1000 },
+            { id: 8, name: "คาเนชั่นนมข้นหวาน", unitWeight: 388 },
+            { id: 9, name: "คาเนชั่นนมข้นจืด", unitWeight: 405 },
+            { id: 10, name: "ส้มสไลด์เชื่อมอบแห้ง", unitWeight: 1000 },
+            { id: 11, name: "ผงพุดดิ้งนม", unitWeight: 1000 },
+            { id: 12, name: "ทรอปิค้า ลิง มะพร้าวน้ำหอมพร้อมปั่น", unitWeight: 185 },
+            { id: 13, name: "เมจินมสดรสจืด 2 ลิตร สำหรับชงกาแฟ-ชา", unitWeight: 2000 },
+            { id: 14, name: "ไข่มุกดำ", unitWeight: 1000 },
+            { id: 15, name: "น้ำเชื่อม", unitWeight: 5000 },
+            { id: 16, name: "คอฟฟี่เวิลด์ ผงนิชิโอะมัทฉะ", unitWeight: 1000 }
+        ];
+
+        function renderTable() {
+            const tbody = document.getElementById('stock-tbody');
+            tbody.innerHTML = items.map((item, index) => `
+                <tr>
+                    <td>${item.id}</td>
+                    <td class="item-name">${item.name}</td>
+                    <td><input type="number" id="full-${index}" min="0" placeholder="0" oninput="calculate(${index})"></td>
+                    <td><input type="number" id="rem-${index}" min="0" placeholder="0" oninput="calculate(${index})"></td>
+                    <td>${item.unitWeight.toLocaleString()}</td>
+                    <td class="total-actual" id="total-${index}">0</td>
+                    <td><input type="number" id="oh-${index}" placeholder="0" oninput="calculate(${index})"></td>
+                    <td class="diff" id="diff-${index}">0</td>
+                </tr>
+            `).join('');
+        }
+
+        function calculate(index) {
+            const full = parseFloat(document.getElementById(`full-${index}`).value) || 0;
+            const rem = parseFloat(document.getElementById(`rem-${index}`).value) || 0;
+            const ohInput = document.getElementById(`oh-${index}`).value;
+            const unitWeight = items[index].unitWeight;
+
+            // ยอดรวมน้ำหนักจริง (g) = (จำนวนเต็ม * น้ำหนักต่อหน่วย) + เศษ (กรัม)
+            const totalActual = (full * unitWeight) + rem;
+            document.getElementById(`total-${index}`).innerText = totalActual.toLocaleString();
+
+            // ผลต่าง (Diff) = ยอดรวมน้ำหนักจริง - ยอดในระบบ (OH)
+            const diffElem = document.getElementById(`diff-${index}`);
+            if (ohInput !== '') {
+                const oh = parseFloat(ohInput) || 0;
+                const diff = totalActual - oh;
+                diffElem.innerText = (diff > 0 ? '+' : '') + diff.toLocaleString();
+                diffElem.className = 'diff ' + (diff > 0 ? 'positive' : (diff < 0 ? 'negative' : ''));
+            } else {
+                diffElem.innerText = '0';
+                diffElem.className = 'diff';
+            }
+        }
+
+        function resetForm() {
+            if (confirm("คุณต้องการล้างข้อมูลทั้งหมดใช่หรือไม่?")) {
+                renderTable();
+            }
+        }
+
+        renderTable();
+    </script>
+</body>
+</html>
