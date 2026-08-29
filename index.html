@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ระบบบันทึกและคำนวณนับสต็อกสินค้า</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,177 +11,200 @@
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
-            --bg-body: #f1f5f9;
+            --bg-body: #f8fafc;
             --card-bg: #ffffff;
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --border: #cbd5e1;
+            --border: #e2e8f0;
             --success: #16a34a;
             --danger: #dc2626;
-            --warning: #d97706;
         }
 
-        * { box-sizing: border-box; font-family: 'Sarabun', sans-serif; }
-        body { background-color: var(--bg-body); margin: 0; padding: 20px 12px; color: var(--text-main); }
+        * { box-sizing: border-box; font-family: 'Sarabun', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-body); margin: 0; padding: 16px; color: var(--text-main); padding-bottom: 90px; }
         .container { max-width: 1280px; margin: 0 auto; }
 
         /* Header */
         .app-header {
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-            color: white; padding: 24px; border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
-            margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: white; padding: 16px 20px; border-radius: 12px;
+            margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;
         }
-        .app-header h1 { margin: 0; font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-        .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(4px); }
+        .app-header h1 { margin: 0; font-size: 1.25rem; font-weight: 700; }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: rgba(255, 255, 255, 0.2); }
 
-        /* KPI Dashboard Cards */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
-        .kpi-card { background: var(--card-bg); padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .kpi-title { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
-        .kpi-value { font-size: 1.8rem; font-weight: 700; color: var(--text-main); }
+        /* KPI Dashboard */
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+        .kpi-card { background: var(--card-bg); padding: 12px; border-radius: 10px; border: 1px solid var(--border); text-align: center; }
+        .kpi-title { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+        .kpi-value { font-size: 1.2rem; font-weight: 700; }
         .kpi-value.danger { color: var(--danger); }
         .kpi-value.success { color: var(--success); }
 
-        /* Control Panel */
+        /* Controls */
         .control-panel {
-            background: var(--card-bg); padding: 20px; border-radius: 12px;
-            border: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 16px;
-            justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            background: var(--card-bg); padding: 14px; border-radius: 12px;
+            border: 1px solid var(--border); margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 10px;
+            justify-content: space-between; align-items: center;
         }
-        .control-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        label { font-weight: 600; font-size: 14px; color: #334155; }
+        .control-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; }
         input[type="date"], select, input[type="text"] {
-            padding: 9px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: white; outline: none; transition: 0.2s;
+            padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: white; outline: none; width: 100%;
         }
-        input[type="date"]:focus, select:focus, input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
 
-        /* Filter Tabs */
-        .filter-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px; gap: 4px; }
-        .tab-btn { padding: 6px 12px; border: none; background: transparent; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
-        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .filter-tabs { display: flex; background: #f1f5f9; padding: 3px; border-radius: 8px; gap: 4px; width: 100%; }
+        .tab-btn { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-muted); }
+        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 
-        /* Action Buttons */
-        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn { padding: 9px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
-        .btn-primary { background-color: var(--primary); color: white; }
-        .btn-primary:hover { background-color: var(--primary-dark); }
+        .btn { padding: 10px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-success { background-color: var(--success); color: white; }
-        .btn-success:hover { background-color: #15803d; }
         .btn-outline { background-color: white; border: 1px solid var(--border); color: var(--text-main); }
-        .btn-outline:hover { background-color: #f8fafc; border-color: #94a3b8; }
-        .btn-danger { background-color: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
-        .btn-danger:hover { background-color: #fee2e2; }
+        .btn-danger { background-color: #fee2e2; color: var(--danger); }
 
-        /* Main Table */
-        .table-card { background: var(--card-bg); border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .table-wrapper { overflow-x: auto; max-height: 65vh; }
-        table { width: 100%; border-collapse: collapse; min-width: 980px; font-size: 14px; }
-        th { background-color: #0f172a; color: #ffffff; font-weight: 600; padding: 12px 10px; text-align: center; position: sticky; top: 0; z-index: 10; font-size: 13px; letter-spacing: 0.3px; }
-        td { border-bottom: 1px solid #f1f5f9; padding: 10px; text-align: center; vertical-align: middle; }
-        tr:nth-child(even) { background-color: #f8fafc; }
-        tr:hover { background-color: #f1f5f9; }
-        td.item-name { text-align: left; font-weight: 600; color: #1e293b; }
-        .unit-badge { font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #475569; font-weight: 500; margin-left: 6px; }
+        /* ===================================================
+           📱 MOBILE VIEW (Default & Screens < 768px)
+           =================================================== */
+        .desktop-only { display: none !important; }
+        .mobile-only { display: block !important; }
 
-        /* Quantity Stepper (Mobile Friendly) */
-        .stepper { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: white; }
-        .stepper button { border: none; background: #f8fafc; width: 28px; height: 32px; font-weight: bold; cursor: pointer; color: #475569; transition: 0.1s; }
-        .stepper button:hover { background: #e2e8f0; color: #0f172a; }
-        .stepper input { width: 55px; border: none; text-align: center; font-weight: 600; font-size: 14px; outline: none; padding: 4px; }
+        .mobile-card-list { display: flex; flex-direction: column; gap: 12px; }
+        .item-card {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .item-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .item-card-title { font-weight: 700; font-size: 15px; color: var(--text-main); }
+        .item-card-unit { font-size: 12px; color: var(--text-muted); background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
 
-        /* Output Cells */
-        .total-actual { font-weight: 700; background-color: #f1f5f9; color: #0f172a; border-radius: 6px; padding: 6px 8px; }
-        .diff-tag { display: inline-block; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 13px; }
-        .diff-tag.positive { background-color: #dcfce7; color: #15803d; }
-        .diff-tag.negative { background-color: #fee2e2; color: #b91c1c; }
-        .diff-tag.zero { background-color: #f1f5f9; color: #64748b; }
+        .item-card-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .input-box-group label { display: block; font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+        
+        /* Mobile Stepper Input */
+        .mobile-stepper { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .mobile-stepper button { width: 36px; height: 42px; background: #f1f5f9; border: none; font-size: 18px; font-weight: bold; color: var(--text-main); }
+        .mobile-stepper input { border: none; text-align: center; font-weight: 700; font-size: 16px; width: 100%; padding: 0; }
 
-        /* Print Media Styles */
-        @media print {
-            body { background: white; padding: 0; }
-            .control-panel, .kpi-grid, .btn-group, .filter-tabs, .app-header span { display: none !important; }
-            .container { max-width: 100%; }
-            .table-card { border: none; box-shadow: none; }
-            .table-wrapper { max-height: none; overflow: visible; }
-            th { background-color: #1e293b !important; color: white !important; }
-            .stepper button { display: none; }
-            .stepper input { border: none; width: auto; }
+        .item-card-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f8fafc; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
+        }
+
+        /* Mobile Fixed Bottom Bar */
+        .mobile-bottom-bar {
+            position: fixed; bottom: 0; left: 0; right: 0; background: white;
+            border-top: 1px solid var(--border); padding: 12px 16px;
+            display: flex; gap: 10px; box-shadow: 0 -4px 12px rgba(0,0,0,0.08); z-index: 100;
+        }
+        .mobile-bottom-bar .btn { flex: 1; height: 48px; font-size: 16px; }
+
+        /* ===================================================
+           💻 DESKTOP VIEW (Screens >= 768px)
+           =================================================== */
+        @media (min-width: 768px) {
+            body { padding-bottom: 24px; }
+            .desktop-only { display: table-row-group !important; }
+            .desktop-block { display: block !important; }
+            .mobile-only { display: none !important; }
+
+            .control-panel { flex-wrap: nowrap; }
+            .control-group { width: auto; }
+            input[type="date"], select, input[type="text"] { width: auto; }
+            .filter-tabs { width: auto; }
+
+            .table-card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+            .table-wrapper { overflow-x: auto; max-height: 70vh; }
+            table { width: 100%; border-collapse: collapse; font-size: 14px; }
+            th { background-color: #0f172a; color: #ffffff; font-weight: 600; padding: 12px; text-align: center; position: sticky; top: 0; z-index: 10; }
+            td { border-bottom: 1px solid #f1f5f9; padding: 10px; text-align: center; vertical-align: middle; }
+            tr:hover { background-color: #f8fafc; }
+            td.item-name { text-align: left; font-weight: 600; }
+            input[type="number"] { width: 90px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; text-align: right; font-weight: 600; }
+
+            .total-actual { font-weight: 700; background-color: #f1f5f9; padding: 6px 10px; border-radius: 6px; }
+            .diff-tag { display: inline-block; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 13px; }
+            .diff-tag.positive { background-color: #dcfce7; color: #15803d; }
+            .diff-tag.negative { background-color: #fee2e2; color: #b91c1c; }
+            .diff-tag.zero { background-color: #f1f5f9; color: #64748b; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- App Header -->
         <header class="app-header">
-            <h1>📦 ระบบบันทึกสต็อกสินค้าออนไลน์</h1>
+            <h1>📦 ระบบนับสต็อกสินค้า</h1>
             <span id="save-status" class="status-badge">ยังไม่ได้บันทึก</span>
         </header>
 
-        <!-- KPI Dashboard Cards -->
+        <!-- KPI Dashboard -->
         <div class="kpi-grid">
             <div class="kpi-card">
-                <div class="kpi-title">📋 นับแล้ว / ทั้งหมด</div>
+                <div class="kpi-title">นับแล้ว</div>
                 <div class="kpi-value" id="kpi-counted">0 / 16</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-title">⚠️ สินค้าที่มีผลต่าง (ไม่ตรง)</div>
-                <div class="kpi-value danger" id="kpi-diff-count">0 รายการ</div>
+                <div class="kpi-title">ผลต่าง (ไม่ตรง)</div>
+                <div class="kpi-value danger" id="kpi-diff-count">0</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-title">⚖️ น้ำหนักรวมผลต่าง (Diff Total)</div>
+                <div class="kpi-title">น้ำหนัก Diff</div>
                 <div class="kpi-value" id="kpi-diff-weight">0 g</div>
             </div>
         </div>
 
-        <!-- Control Panel -->
+        <!-- Controls -->
         <div class="control-panel">
             <div class="control-group">
-                <label for="record-date">📅 วันที่บันทึก:</label>
                 <input type="date" id="record-date" onchange="onDateChange()">
-                
                 <select id="history-select" onchange="loadFromHistory()">
                     <option value="">📂 ประวัติย้อนหลัง</option>
                 </select>
             </div>
 
             <div class="control-group">
-                <input type="text" id="search-input" placeholder="🔍 ค้นหาชื่อสินค้า..." oninput="renderTable()">
+                <input type="text" id="search-input" placeholder="🔍 ค้นหาชื่อสินค้า..." oninput="renderApp()">
                 <div class="filter-tabs">
                     <button class="tab-btn active" onclick="setFilter('all', this)">ทั้งหมด</button>
-                    <button class="tab-btn" onclick="setFilter('diff', this)">เฉพาะที่ไม่ตรง</button>
-                    <button class="tab-btn" onclick="setFilter('uncounted', this)">ยังไม่ได้นับ</button>
+                    <button class="tab-btn" onclick="setFilter('diff', this)">ไม่ตรง</button>
+                    <button class="tab-btn" onclick="setFilter('uncounted', this)">ยังไม่นับ</button>
                 </div>
             </div>
 
-            <div class="btn-group">
-                <button class="btn btn-success" onclick="saveData()">💾 บันทึกข้อมูล</button>
-                <button class="btn btn-outline" onclick="exportCSV()">📥 ส่งออก Excel</button>
-                <button class="btn btn-outline" onclick="window.print()">🖨️ พิมพ์</button>
+            <div class="control-group desktop-only">
+                <button class="btn btn-success" onclick="saveData()">💾 บันทึก</button>
+                <button class="btn btn-outline" onclick="exportCSV()">📥 Excel</button>
                 <button class="btn btn-danger" onclick="deleteCurrentDateData()">🗑️ ลบ</button>
             </div>
         </div>
 
-        <!-- Data Table -->
-        <div class="table-card">
+        <!-- 📱 Mobile Card List View -->
+        <div class="mobile-only mobile-card-list" id="mobile-card-container"></div>
+
+        <!-- 💻 Desktop Table View -->
+        <div class="desktop-only table-card">
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
                             <th style="width: 50px;">#</th>
                             <th style="text-align: left;">ชื่อสินค้า</th>
-                            <th style="width: 110px;">น้ำหนัก/หน่วย</th>
-                            <th style="width: 150px;">จำนวนเต็ม (หน่วย)</th>
-                            <th style="width: 120px;">เศษ (กรัม)</th>
-                            <th style="width: 150px;">ยอดนับจริง (g)</th>
-                            <th style="width: 130px;">ยอดในระบบ (OH)</th>
-                            <th style="width: 130px;">ผลต่าง (Diff)</th>
+                            <th>น้ำหนัก/หน่วย</th>
+                            <th>จำนวนเต็ม</th>
+                            <th>เศษ (g)</th>
+                            <th>ยอดนับจริง (g)</th>
+                            <th>ยอดระบบ OH</th>
+                            <th>ผลต่าง Diff</th>
                         </tr>
                     </thead>
-                    <tbody id="stock-tbody"></tbody>
+                    <tbody id="desktop-tbody"></tbody>
                 </table>
             </div>
         </div>
+    </div>
+
+    <!-- 📱 Mobile Fixed Bottom Bar -->
+    <div class="mobile-only mobile-bottom-bar">
+        <button class="btn btn-outline" onclick="exportCSV()" style="flex: 0.4;">📥</button>
+        <button class="btn btn-success" onclick="saveData()">💾 บันทึกข้อมูลวันนี้</button>
     </div>
 
     <script>
@@ -204,13 +227,13 @@
             { id: 16, name: "คอฟฟี่เวิลด์ ผงนิชิโอะมัทฉะ", unitWeight: 1000 }
         ];
 
-        const STORAGE_PREFIX = "stock_record_v3_";
+        const STORAGE_PREFIX = "stock_record_v4_";
         let currentFilter = 'all';
+        let formData = items.map(() => ({ full: '', rem: '', oh: '' }));
 
         window.onload = function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('record-date').value = today;
-            renderTable();
             updateHistoryDropdown();
             loadDateData(today);
         };
@@ -219,103 +242,133 @@
             currentFilter = filter;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            renderTable();
+            renderApp();
         }
 
-        function renderTable() {
-            const tbody = document.getElementById('stock-tbody');
+        function updateValue(index, field, value) {
+            formData[index][field] = value;
+            calculateAndRenderRow(index);
+            updateKPI();
+        }
+
+        function stepValue(index, field, step) {
+            let current = parseFloat(formData[index][field]) || 0;
+            let newVal = Math.max(0, current + step);
+            formData[index][field] = newVal.toString();
+            renderApp();
+        }
+
+        function calculateAndRenderRow(index) {
+            const item = items[index];
+            const full = parseFloat(formData[index].full) || 0;
+            const rem = parseFloat(formData[index].rem) || 0;
+            const ohInput = formData[index].oh;
+
+            const totalActual = (full * item.unitWeight) + rem;
+            let diff = 0;
+            let diffClass = 'zero';
+            let diffText = '0 g';
+
+            if (ohInput !== '') {
+                const oh = parseFloat(ohInput) || 0;
+                diff = totalActual - oh;
+                diffText = (diff > 0 ? '+' : '') + diff.toLocaleString() + ' g';
+                diffClass = diff > 0 ? 'positive' : (diff < 0 ? 'negative' : 'zero');
+            }
+
+            // Update Desktop UI
+            const deskTotal = document.getElementById(`desk-total-${index}`);
+            const deskDiff = document.getElementById(`desk-diff-${index}`);
+            if (deskTotal) deskTotal.innerText = totalActual.toLocaleString() + ' g';
+            if (deskDiff) {
+                deskDiff.innerText = diffText;
+                deskDiff.className = `diff-tag ${diffClass}`;
+            }
+
+            // Update Mobile UI
+            const mobTotal = document.getElementById(`mob-total-${index}`);
+            const mobDiff = document.getElementById(`mob-diff-${index}`);
+            if (mobTotal) mobTotal.innerText = totalActual.toLocaleString() + ' g';
+            if (mobDiff) {
+                mobDiff.innerText = diffText;
+                mobDiff.className = `diff-tag ${diffClass}`;
+            }
+        }
+
+        function renderApp() {
             const search = document.getElementById('search-input').value.toLowerCase();
+            const mobContainer = document.getElementById('mobile-card-container');
+            const deskTbody = document.getElementById('desktop-tbody');
 
-            // ดึงค่าเดิมของ input ไว้กันหายตอน re-render
-            const currentInputs = items.map((_, i) => ({
-                full: document.getElementById(`full-${i}`)?.value || '',
-                rem: document.getElementById(`rem-${i}`)?.value || '',
-                oh: document.getElementById(`oh-${i}`)?.value || ''
-            }));
-
-            tbody.innerHTML = '';
+            mobContainer.innerHTML = '';
+            deskTbody.innerHTML = '';
 
             items.forEach((item, index) => {
-                const fullVal = currentInputs[index].full;
-                const remVal = currentInputs[index].rem;
-                const ohVal = currentInputs[index].oh;
-
-                const full = parseFloat(fullVal) || 0;
-                const rem = parseFloat(remVal) || 0;
-                const oh = parseFloat(ohVal) || 0;
+                const data = formData[index];
+                const full = parseFloat(data.full) || 0;
+                const rem = parseFloat(data.rem) || 0;
+                const oh = parseFloat(data.oh) || 0;
                 const totalActual = (full * item.unitWeight) + rem;
                 const diff = totalActual - oh;
 
-                const isCounted = fullVal !== '' || remVal !== '';
-                const hasDiff = ohVal !== '' && diff !== 0;
+                const isCounted = data.full !== '' || data.rem !== '';
+                const hasDiff = data.oh !== '' && diff !== 0;
 
-                // กรองข้อมูล
                 if (search && !item.name.toLowerCase().includes(search)) return;
                 if (currentFilter === 'diff' && !hasDiff) return;
                 if (currentFilter === 'uncounted' && isCounted) return;
 
+                // 📱 Render Mobile Card
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="item-card-header">
+                        <div class="item-card-title">${item.id}. ${item.name}</div>
+                        <span class="item-card-unit">${item.unitWeight}g/หน่วย</span>
+                    </div>
+                    <div class="item-card-inputs">
+                        <div class="input-box-group">
+                            <label>จำนวนเต็ม (หน่วย)</label>
+                            <div class="mobile-stepper">
+                                <button onclick="stepValue(${index}, 'full', -1)">-</button>
+                                <input type="number" inputmode="numeric" value="${data.full}" placeholder="0" oninput="updateValue(${index}, 'full', this.value)">
+                                <button onclick="stepValue(${index}, 'full', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="input-box-group">
+                            <label>เศษ (กรัม)</label>
+                            <input type="number" inputmode="numeric" value="${data.rem}" placeholder="0" style="height: 42px; text-align: center; font-weight: 700; font-size: 16px;" oninput="updateValue(${index}, 'rem', this.value)">
+                        </div>
+                    </div>
+                    <div class="input-box-group" style="margin-bottom: 10px;">
+                        <label>ยอดในระบบ (OH)</label>
+                        <input type="number" inputmode="numeric" value="${data.oh}" placeholder="0" style="height: 38px; text-align: right; font-weight: 600;" oninput="updateValue(${index}, 'oh', this.value)">
+                    </div>
+                    <div class="item-card-footer">
+                        <span>นับจริง: <strong id="mob-total-${index}">0 g</strong></span>
+                        <span id="mob-diff-${index}" class="diff-tag zero">0 g</span>
+                    </div>
+                `;
+                mobContainer.appendChild(card);
+
+                // 💻 Render Desktop Row
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${item.id}</td>
                     <td class="item-name">${item.name}</td>
                     <td>${item.unitWeight.toLocaleString()} g</td>
-                    <td>
-                        <div class="stepper">
-                            <button onclick="stepInput(${index}, 'full', -1)">-</button>
-                            <input type="number" id="full-${index}" value="${fullVal}" min="0" placeholder="0" oninput="calculate(${index})">
-                            <button onclick="stepInput(${index}, 'full', 1)">+</button>
-                        </div>
-                    </td>
-                    <td>
-                        <input type="number" id="rem-${index}" value="${remVal}" min="0" placeholder="0" style="width: 80px;" oninput="calculate(${index})">
-                    </td>
-                    <td><div class="total-actual" id="total-${index}">0</div></td>
-                    <td>
-                        <input type="number" id="oh-${index}" value="${ohVal}" placeholder="0" style="width: 90px;" oninput="calculate(${index})">
-                    </td>
-                    <td><span class="diff-tag zero" id="diff-${index}">0</span></td>
+                    <td><input type="number" value="${data.full}" placeholder="0" oninput="updateValue(${index}, 'full', this.value)"></td>
+                    <td><input type="number" value="${data.rem}" placeholder="0" oninput="updateValue(${index}, 'rem', this.value)"></td>
+                    <td><div class="total-actual" id="desk-total-${index}">0 g</div></td>
+                    <td><input type="number" value="${data.oh}" placeholder="0" oninput="updateValue(${index}, 'oh', this.value)"></td>
+                    <td><span id="desk-diff-${index}" class="diff-tag zero">0 g</span></td>
                 `;
-                tbody.appendChild(tr);
+                deskTbody.appendChild(tr);
 
-                calculate(index, false);
+                calculateAndRenderRow(index);
             });
 
             updateKPI();
-        }
-
-        function stepInput(index, field, step) {
-            const input = document.getElementById(`${field}-${index}`);
-            if (!input) return;
-            let val = parseInt(input.value) || 0;
-            val = Math.max(0, val + step);
-            input.value = val;
-            calculate(index);
-        }
-
-        function calculate(index, updateKpiFlag = true) {
-            const fullInput = document.getElementById(`full-${index}`);
-            if (!fullInput) return;
-
-            const full = parseFloat(fullInput.value) || 0;
-            const rem = parseFloat(document.getElementById(`rem-${index}`).value) || 0;
-            const ohInput = document.getElementById(`oh-${index}`).value;
-            const unitWeight = items[index].unitWeight;
-
-            const totalActual = (full * unitWeight) + rem;
-            document.getElementById(`total-${index}`).innerText = totalActual.toLocaleString() + ' g';
-
-            const diffElem = document.getElementById(`diff-${index}`);
-            if (ohInput !== '') {
-                const oh = parseFloat(ohInput) || 0;
-                const diff = totalActual - oh;
-                diffElem.innerText = (diff > 0 ? '+' : '') + diff.toLocaleString() + ' g';
-                diffElem.className = 'diff-tag ' + (diff > 0 ? 'positive' : (diff < 0 ? 'negative' : 'zero'));
-            } else {
-                diffElem.innerText = '0 g';
-                diffElem.className = 'diff-tag zero';
-            }
-
-            if (updateKpiFlag) updateKPI();
         }
 
         function updateKPI() {
@@ -324,20 +377,13 @@
             let totalDiffWeight = 0;
 
             items.forEach((item, index) => {
-                const fullEl = document.getElementById(`full-${index}`);
-                const remEl = document.getElementById(`rem-${index}`);
-                const ohEl = document.getElementById(`oh-${index}`);
+                const data = formData[index];
+                if (data.full !== '' || data.rem !== '') counted++;
 
-                const fullVal = fullEl ? fullEl.value : '';
-                const remVal = remEl ? remEl.value : '';
-                const ohVal = ohEl ? ohEl.value : '';
-
-                if (fullVal !== '' || remVal !== '') counted++;
-
-                if (ohVal !== '') {
-                    const full = parseFloat(fullVal) || 0;
-                    const rem = parseFloat(remVal) || 0;
-                    const oh = parseFloat(ohVal) || 0;
+                if (data.oh !== '') {
+                    const full = parseFloat(data.full) || 0;
+                    const rem = parseFloat(data.rem) || 0;
+                    const oh = parseFloat(data.oh) || 0;
                     const diff = ((full * item.unitWeight) + rem) - oh;
 
                     if (diff !== 0) {
@@ -348,7 +394,7 @@
             });
 
             document.getElementById('kpi-counted').innerText = `${counted} / ${items.length}`;
-            document.getElementById('kpi-diff-count').innerText = `${diffCount} รายการ`;
+            document.getElementById('kpi-diff-count').innerText = diffCount;
             
             const diffWeightEl = document.getElementById('kpi-diff-weight');
             diffWeightEl.innerText = (totalDiffWeight > 0 ? '+' : '') + totalDiffWeight.toLocaleString() + ' g';
@@ -359,14 +405,8 @@
             const dateStr = document.getElementById('record-date').value;
             if (!dateStr) return alert("กรุณาเลือกวันที่ก่อนบันทึก");
 
-            const recordData = items.map((_, index) => ({
-                full: document.getElementById(`full-${index}`)?.value || '',
-                rem: document.getElementById(`rem-${index}`)?.value || '',
-                oh: document.getElementById(`oh-${index}`)?.value || ''
-            }));
-
-            localStorage.setItem(STORAGE_PREFIX + dateStr, JSON.stringify(recordData));
-            alert(`💾 บันทึกข้อมูลวันที่ ${dateStr} สำเร็จ!`);
+            localStorage.setItem(STORAGE_PREFIX + dateStr, JSON.stringify(formData));
+            alert(`💾 บันทึกข้อมูลวันที่ ${dateStr} เรียบร้อย!`);
             updateHistoryDropdown();
             setStatusBadge(true);
         }
@@ -374,28 +414,13 @@
         function loadDateData(dateStr) {
             const savedJSON = localStorage.getItem(STORAGE_PREFIX + dateStr);
             if (savedJSON) {
-                const recordData = JSON.parse(savedJSON);
-                recordData.forEach((data, index) => {
-                    if (document.getElementById(`full-${index}`)) {
-                        document.getElementById(`full-${index}`).value = data.full || '';
-                        document.getElementById(`rem-${index}`).value = data.rem || '';
-                        document.getElementById(`oh-${index}`).value = data.oh || '';
-                        calculate(index, false);
-                    }
-                });
+                formData = JSON.parse(savedJSON);
                 setStatusBadge(true);
             } else {
-                items.forEach((_, index) => {
-                    if (document.getElementById(`full-${index}`)) {
-                        document.getElementById(`full-${index}`).value = '';
-                        document.getElementById(`rem-${index}`).value = '';
-                        document.getElementById(`oh-${index}`).value = '';
-                        calculate(index, false);
-                    }
-                });
+                formData = items.map(() => ({ full: '', rem: '', oh: '' }));
                 setStatusBadge(false);
             }
-            updateKPI();
+            renderApp();
         }
 
         function onDateChange() {
@@ -448,9 +473,10 @@
             let csv = '\uFEFFข้อที่,ชื่อสินค้า,น้ำหนักต่อหน่วย(g),จำนวนเต็ม,เศษ(g),ยอดรวมนับจริง(g),ยอดในระบบ(g),ผลต่างDiff(g)\n';
 
             items.forEach((item, index) => {
-                const full = parseFloat(document.getElementById(`full-${index}`)?.value) || 0;
-                const rem = parseFloat(document.getElementById(`rem-${index}`)?.value) || 0;
-                const oh = parseFloat(document.getElementById(`oh-${index}`)?.value) || 0;
+                const data = formData[index];
+                const full = parseFloat(data.full) || 0;
+                const rem = parseFloat(data.rem) || 0;
+                const oh = parseFloat(data.oh) || 0;
                 const totalActual = (full * item.unitWeight) + rem;
                 const diff = totalActual - oh;
 
