@@ -554,30 +554,36 @@
             }
         }
 
-        /* 📄 Export PDF Report */
+        /* 📄 Export PDF Report (ปรับปรุงเลย์เอาต์ระบบตาราง ป้องกันตกขอบ) */
         function exportPDF() {
             const dateStr = document.getElementById('record-date').value || new Date().toISOString().split('T')[0];
             const auditor = document.getElementById('auditor-name').value || 'ไม่ได้ระบุ';
 
             let html = `
-            <div style="font-family: 'Sarabun', sans-serif; padding: 15px; color: #0f172a;">
-                <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 16px 20px; border-radius: 8px; margin-bottom: 16px;">
-                    <h2 style="margin: 0; font-size: 20px; font-weight: 700;">📦 รายงานสรุปการนับสต็อกสินค้า</h2>
-                    <div style="font-size: 13px; margin-top: 4px; color: #93c5fd;">วันที่ตรวจนับ: ${dateStr} &nbsp;|&nbsp; ผู้ตรวจนับ: ${auditor}</div>
-                </div>
+            <div style="font-family: 'Sarabun', sans-serif; padding: 10px; color: #0f172a; width: 100%; box-sizing: border-box;">
+                <!-- Header -->
+                <table style="width: 100%; background: #0f172a; color: white; border-radius: 6px; padding: 12px; margin-bottom: 12px; border-collapse: collapse;">
+                    <tr>
+                        <td>
+                            <h2 style="margin: 0; font-size: 18px; font-weight: 700; color: #ffffff;">📦 รายงานสรุปการนับสต็อกสินค้า</h2>
+                            <div style="font-size: 12px; margin-top: 4px; color: #93c5fd;">วันที่ตรวจนับ: ${dateStr} &nbsp;|&nbsp; ผู้ตรวจนับ: ${auditor}</div>
+                        </td>
+                    </tr>
+                </table>
 
-                <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
+                <!-- Table Data -->
+                <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 25px;">
                     <thead>
                         <tr style="background-color: #0f172a; color: white;">
-                            <th style="padding: 8px 4px; border: 1px solid #0f172a; width: 30px;">#</th>
-                            <th style="padding: 8px 6px; border: 1px solid #0f172a; text-align: left;">ชื่อสินค้า</th>
-                            <th style="padding: 8px 4px; border: 1px solid #0f172a;">หมวดหมู่</th>
-                            <th style="padding: 8px 4px; border: 1px solid #0f172a;">หน่วย</th>
-                            <th style="padding: 8px 4px; border: 1px solid #0f172a;">จำนวนเต็ม</th>
-                            <th style="padding: 8px 4px; border: 1px solid #0f172a;">เศษ (g)</th>
-                            <th style="padding: 8px 6px; border: 1px solid #0f172a;">ยอดนับจริง</th>
-                            <th style="padding: 8px 6px; border: 1px solid #0f172a;">ยอดระบบ (OH)</th>
-                            <th style="padding: 8px 6px; border: 1px solid #0f172a;">ผลต่าง (Diff)</th>
+                            <th style="padding: 6px 4px; border: 1px solid #0f172a; width: 25px; text-align: center;">#</th>
+                            <th style="padding: 6px 6px; border: 1px solid #0f172a; text-align: left;">ชื่อสินค้า</th>
+                            <th style="padding: 6px 4px; border: 1px solid #0f172a; text-align: center; width: 55px;">หมวดหมู่</th>
+                            <th style="padding: 6px 4px; border: 1px solid #0f172a; text-align: center; width: 50px;">หน่วย</th>
+                            <th style="padding: 6px 4px; border: 1px solid #0f172a; text-align: center; width: 45px;">จำนวนเต็ม</th>
+                            <th style="padding: 6px 4px; border: 1px solid #0f172a; text-align: center; width: 45px;">เศษ (g)</th>
+                            <th style="padding: 6px 6px; border: 1px solid #0f172a; text-align: right; width: 65px;">ยอดนับจริง</th>
+                            <th style="padding: 6px 6px; border: 1px solid #0f172a; text-align: right; width: 65px;">ยอดระบบ (OH)</th>
+                            <th style="padding: 6px 6px; border: 1px solid #0f172a; text-align: center; width: 65px;">ผลต่าง (Diff)</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -599,41 +605,46 @@
 
                 html += `
                     <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'};">
-                        <td style="padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center;">${item.id}</td>
-                        <td style="padding: 6px 6px; border: 1px solid #e2e8f0; text-align: left; font-weight: 600;">${item.name}</td>
-                        <td style="padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center;">${getCatLabel(item.cat)}</td>
-                        <td style="padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center;">${item.unitWeight}g</td>
-                        <td style="padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center;">${data.full !== '' ? data.full : '-'}</td>
-                        <td style="padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center;">${data.rem !== '' ? data.rem : '-'}</td>
-                        <td style="padding: 6px 6px; border: 1px solid #e2e8f0; text-align: right; font-weight: 700;">${totalActual.toLocaleString()} g</td>
-                        <td style="padding: 6px 6px; border: 1px solid #e2e8f0; text-align: right;">${data.oh !== '' ? parseFloat(data.oh).toLocaleString() + ' g' : '-'}</td>
-                        <td style="padding: 6px 6px; border: 1px solid #e2e8f0; text-align: center; font-weight: 700; color: ${diffColor};">${diffText}</td>
+                        <td style="padding: 5px 4px; border: 1px solid #e2e8f0; text-align: center;">${item.id}</td>
+                        <td style="padding: 5px 6px; border: 1px solid #e2e8f0; text-align: left; font-weight: 600;">${item.name}</td>
+                        <td style="padding: 5px 4px; border: 1px solid #e2e8f0; text-align: center;">${getCatLabel(item.cat)}</td>
+                        <td style="padding: 5px 4px; border: 1px solid #e2e8f0; text-align: center;">${item.unitWeight}g</td>
+                        <td style="padding: 5px 4px; border: 1px solid #e2e8f0; text-align: center;">${data.full !== '' ? data.full : '-'}</td>
+                        <td style="padding: 5px 4px; border: 1px solid #e2e8f0; text-align: center;">${data.rem !== '' ? data.rem : '-'}</td>
+                        <td style="padding: 5px 6px; border: 1px solid #e2e8f0; text-align: right; font-weight: 700;">${totalActual.toLocaleString()} g</td>
+                        <td style="padding: 5px 6px; border: 1px solid #e2e8f0; text-align: right;">${data.oh !== '' ? parseFloat(data.oh).toLocaleString() + ' g' : '-'}</td>
+                        <td style="padding: 5px 6px; border: 1px solid #e2e8f0; text-align: center; font-weight: 700; color: ${diffColor};">${diffText}</td>
                     </tr>`;
             });
 
             html += `
                     </tbody>
                 </table>
-                <div style="margin-top: 40px; display: flex; justify-content: space-between; text-align: center;">
-                    <div style="width: 45%;">
-                        <div style="border-bottom: 1px dotted #94a3b8; width: 80%; margin: 0 auto 8px auto;"></div>
-                        <div style="font-size: 12px; font-weight: bold;">( ${auditor} )</div>
-                        <div style="font-size: 11px; color: #64748b;">ผู้ตรวจนับสินค้า</div>
-                    </div>
-                    <div style="width: 45%;">
-                        <div style="border-bottom: 1px dotted #94a3b8; width: 80%; margin: 0 auto 8px auto;"></div>
-                        <div style="font-size: 12px; font-weight: bold;">( .................................................... )</div>
-                        <div style="font-size: 11px; color: #64748b;">ผู้จัดการร้าน / ผู้ตรวจสอบ</div>
-                    </div>
-                </div>
+
+                <!-- Signature Section (ใช้ Table จัดตำแหน่ง) -->
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <tr>
+                        <td style="width: 50%; text-align: center; vertical-align: bottom;">
+                            <div style="border-bottom: 1px dotted #94a3b8; width: 70%; margin: 0 auto 8px auto;"></div>
+                            <div style="font-size: 11px; font-weight: bold; color: #0f172a;">( ${auditor} )</div>
+                            <div style="font-size: 10px; color: #64748b; margin-top: 2px;">ผู้ตรวจนับสินค้า</div>
+                        </td>
+                        <td style="width: 50%; text-align: center; vertical-align: bottom;">
+                            <div style="border-bottom: 1px dotted #94a3b8; width: 70%; margin: 0 auto 8px auto;"></div>
+                            <div style="font-size: 11px; font-weight: bold; color: #0f172a;">( .................................................... )</div>
+                            <div style="font-size: 10px; color: #64748b; margin-top: 2px;">ผู้จัดการร้าน / ผู้ตรวจสอบ</div>
+                        </td>
+                    </tr>
+                </table>
             </div>`;
 
             const opt = {
-                margin:       8,
+                margin:       [8, 8, 8, 8],
                 filename:     `รายงานนับสต็อก_${dateStr}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
             html2pdf().set(opt).from(html).save();
