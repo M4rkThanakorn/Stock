@@ -10,6 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- 📄 เพิ่ม html2pdf.js สำหรับสร้างและส่งออกไฟล์ PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --primary: #2563eb;
@@ -192,6 +194,7 @@
 
             <div class="control-group desktop-block" style="display: none; gap: 6px;">
                 <button class="btn btn-line" onclick="copyLineSummary()">💬 สรุปส่ง LINE</button>
+                <button class="btn btn-outline" onclick="exportPDF()">📄 PDF</button>
                 <button class="btn btn-outline" onclick="exportCSV()">📥 Excel</button>
                 <button class="btn btn-outline" onclick="exportJSONBackup()">💾 สำรองข้อมูล</button>
                 <button class="btn btn-outline" onclick="importJSONBackup()">📤 นำเข้าข้อมูล</button>
@@ -225,7 +228,8 @@
 
     <div class="mobile-only mobile-bottom-bar">
         <button class="btn btn-primary" onclick="openScanner()">📷 สแกน</button>
-        <button class="btn btn-line" onclick="copyLineSummary()">💬 สรุป LINE</button>
+        <button class="btn btn-line" onclick="copyLineSummary()">💬 LINE</button>
+        <button class="btn btn-outline" onclick="exportPDF()">📄 PDF</button>
         <button class="btn btn-outline" onclick="exportCSV()">📥 Excel</button>
         <button class="btn btn-danger" onclick="resetCurrentDateData()">🔄 ล้างค่า</button>
     </div>
@@ -367,14 +371,9 @@
                 const isCounted = data.full !== '' || data.rem !== '';
                 const hasDiff = data.oh !== '' && diff !== 0;
 
-                // Category Filter
                 if (currentCatFilter !== 'all' && item.cat !== currentCatFilter) return;
-
-                // Status Filter
                 if (currentStatusFilter === 'diff' && !hasDiff) return;
                 if (currentStatusFilter === 'uncounted' && isCounted) return;
-
-                // Search Filter (Name or Barcode/Code)
                 if (search && !item.name.toLowerCase().includes(search) && !item.code.toLowerCase().includes(search)) return;
 
                 // 📱 Render Mobile Card
@@ -530,7 +529,6 @@
                     closeScanner();
                     document.getElementById('search-input').value = decodedText;
                     renderApp();
-                    // Auto scroll to item on mobile
                     const foundIndex = items.findIndex(i => i.code === decodedText || i.name.includes(decodedText));
                     if (foundIndex !== -1) {
                         const targetCard = document.getElementById(`mob-card-${foundIndex}`);
@@ -554,6 +552,91 @@
             } else {
                 document.getElementById('scanner-modal').style.display = 'none';
             }
+        }
+
+        /* 📄 Export PDF Report */
+        function exportPDF() {
+            const dateStr = document.getElementById('record-date').value || new Date().toISOString().split('T')[0];
+            const auditor = document.getElementById('auditor-name').value || 'ไม่ได้ระบุ';
+
+            let html = `
+            <div style="font-family: 'Sarabun', sans-serif; padding: 15px; color: #0f172a;">
+                <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 16px 20px; border-radius: 8px; margin-bottom: 16px;">
+                    <h2 style="margin: 0; font-size: 20px; font-weight: 700;">📦 รายงานสรุปการนับสต็อกสินค้า</h2>
+                    <div style="font-size: 13px; margin-top: 4px; color: #93c5fd;">วันที่ตรวจนับ: ${dateStr} &nbsp;|&nbsp; ผู้ตรวจนับ: ${auditor}</div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
+                    <thead>
+                        <tr style="background-color: #0f172a; color: white;">
+                            <th style="padding: 8px 4px; border: 1px solid #0f172a; width: 30px;">#</th>
+                            <th style="padding: 8px 6px; border: 1px solid #0f172a; text-align: left;">ชื่อสินค้า</th>
+                            <th style="padding: 8px 4px; border: 1px solid #0f172a;">หมวดหมู่</th>
+                            <th style="padding: 8px 4px; border: 1px solid #0f172a;">หน่วย</th>
+                            <th style="padding: 8px 4px; border: 1px solid #0f172a;">จำนวนเต็ม</th>
+                            <th style="padding: 8px 4px; border: 1px solid #0f172a;">เศษ (g)</th>
+                            <th style="padding: 8px 6px; border: 1px solid #0f172a;">ยอดนับจริง</th>
+                            <th style="padding: 8px 6px; border: 1px solid #0f172a;">ยอดระบบ (OH)</th>
+                            <th style="padding: 8px 6px; border: 1px solid #0f172a;">ผลต่าง (Diff)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            items.forEach((item, index) => {
+                const data = formData[index];
+                const full = parseFloat(data.full) || 0;
+                const rem = parseFloat(data.rem) || 0;
+                const oh = parseFloat(data.oh) || 0;
+                const totalActual = (full * item.unitWeight) + rem;
+                const diff = totalActual - oh;
+                
+                let diffColor = '#64748b';
+                let diffText = '0 g';
+                if (data.oh !== '') {
+                    if (diff > 0) { diffColor = '#15803d'; diffText = '+' + diff.toLocaleString() + ' g'; }
+                    else if (diff < 0) { diffColor = '#b91c1c'; diffText = diff.toLocaleString() + ' g'; }
+                }
+
+                html += `
+                    <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+                        <td style="padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center;">${item.id}</td>
+                        <td style="padding: 6px 6px; border: 1px solid #e2e8f0; text-align: left; font-weight: 600;">${item.name}</td>
+                        <td style="padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center;">${getCatLabel(item.cat)}</td>
+                        <td style="padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center;">${item.unitWeight}g</td>
+                        <td style="padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center;">${data.full !== '' ? data.full : '-'}</td>
+                        <td style="padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center;">${data.rem !== '' ? data.rem : '-'}</td>
+                        <td style="padding: 6px 6px; border: 1px solid #e2e8f0; text-align: right; font-weight: 700;">${totalActual.toLocaleString()} g</td>
+                        <td style="padding: 6px 6px; border: 1px solid #e2e8f0; text-align: right;">${data.oh !== '' ? parseFloat(data.oh).toLocaleString() + ' g' : '-'}</td>
+                        <td style="padding: 6px 6px; border: 1px solid #e2e8f0; text-align: center; font-weight: 700; color: ${diffColor};">${diffText}</td>
+                    </tr>`;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+                <div style="margin-top: 40px; display: flex; justify-content: space-between; text-align: center;">
+                    <div style="width: 45%;">
+                        <div style="border-bottom: 1px dotted #94a3b8; width: 80%; margin: 0 auto 8px auto;"></div>
+                        <div style="font-size: 12px; font-weight: bold;">( ${auditor} )</div>
+                        <div style="font-size: 11px; color: #64748b;">ผู้ตรวจนับสินค้า</div>
+                    </div>
+                    <div style="width: 45%;">
+                        <div style="border-bottom: 1px dotted #94a3b8; width: 80%; margin: 0 auto 8px auto;"></div>
+                        <div style="font-size: 12px; font-weight: bold;">( .................................................... )</div>
+                        <div style="font-size: 11px; color: #64748b;">ผู้จัดการร้าน / ผู้ตรวจสอบ</div>
+                    </div>
+                </div>
+            </div>`;
+
+            const opt = {
+                margin:       8,
+                filename:     `รายงานนับสต็อก_${dateStr}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(html).save();
         }
 
         /* 💬 LINE Summary */
